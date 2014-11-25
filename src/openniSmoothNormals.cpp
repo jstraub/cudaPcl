@@ -51,6 +51,7 @@ int main (int argc, char** argv)
   int32_t B = 10;
   bool compress = false;
   if(vm.count("f_d")) f_d = vm["f_d"].as<double>();
+  if(vm.count("eps")) eps = vm["eps"].as<double>();
   if(vm.count("B")) B = vm["B"].as<int>();
   if(vm.count("compress")) compress = true;
 

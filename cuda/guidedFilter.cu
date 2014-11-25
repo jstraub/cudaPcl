@@ -261,3 +261,76 @@ void guidedFilter_out_gpu(uint8_t* haveData, double* depth, double* aInt,
   }
   checkCudaErrors(cudaDeviceSynchronize());
 };
+
+ // ------------------------------- testing -------------------------------------
+
+template<typename T, uint32_t BLK_SIZE, int32_t B>
+__global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* haveDataAfter, T* a, T* b, int32_t*
+    Ns, T* dSum, T* dSqSum, double eps, uint32_t w, uint32_t h)
+{
+
+  const int idx = threadIdx.x + blockIdx.x*blockDim.x;
+  const int idy = threadIdx.y + blockIdx.y*blockDim.y;
+  const int id = idx+w*idy;
+
+  if((idx<w)&&(idy<h) && (haveData[id]))
+  {
+    int32_t lu,ld,rd,ru;
+    if(!integralCheck<B>(haveData,idy,idx,w,h,&lu,&ld,&rd,&ru)) // get the coordinates for integral img
+    {
+      haveDataAfter[id] = 0;
+      return;
+    }
+    const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
+    if(n < (2*B)*(2*B))
+    {
+      haveDataAfter[id] = 0;
+      return;
+    }
+    const T muG = integralGet<T>(dSum,lu,ld,rd,ru);
+    const T s = integralGet<T>(dSqSum,lu,ld,rd,ru);
+    const T muSq = muG*muG;
+    const T n1 = n-1.;
+
+    const T z = depth[id];
+    T epsT = eps;
+    if(eps <= 0.)
+    {
+      epsT = 0.0012+0.0019*(z-0.4)*(z-0.4) + 0.0001/sqrt(z); // leaving out the noise by angle
+      epsT *=5.;
+      if(idx==300 && idy == 300)
+        printf("eps=%f",epsT);
+    }
+
+    const T a_ = ((n*s-muSq)*n1)/((s*n-muSq+epsT*n1*n)*n);
+
+    b[id] = muG*(1. - a_)/n;
+    a[id] = a_;
+    haveDataAfter[id] = 1;
+  }
+}
+
+void guidedFilter_ab_gpu(double* depth, uint8_t* haveData, uint8_t*
+    haveDataAfter, double* a, double* b, int32_t* Ns, double* dSum, double*
+    dSqSum, double eps, uint32_t B, uint32_t w, uint32_t h)
+{
+  dim3 threadsSq(16,16,1);
+  dim3 blocksSq(w/16+(w%16>0?1:0), h/16+(h%16>0?1:0),1);
+
+  if(B==3){
+    guidedFilter_ab_kernel<double,16,3><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==5){
+    guidedFilter_ab_kernel<double,16,5><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==6){
+    guidedFilter_ab_kernel<double,16,6><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==7){
+    guidedFilter_ab_kernel<double,16,7><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==8){
+    guidedFilter_ab_kernel<double,16,8><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==9){
+    guidedFilter_ab_kernel<double,16,9><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }else if(B==10){
+    guidedFilter_ab_kernel<double,16,10><<<blocksSq,threadsSq>>>(depth,haveData,haveDataAfter,a,b,Ns,dSum,dSqSum,eps,w,h); 
+  }
+  checkCudaErrors(cudaDeviceSynchronize());
+};

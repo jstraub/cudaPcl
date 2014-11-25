@@ -30,6 +30,11 @@ void guidedFilter_out_gpu(uint8_t* haveData, double* depth, double* aInt,
     double* bInt, int32_t* Ns, double* depthSmooth,  uint32_t B,uint32_t w,
     uint32_t h);
 
+
+void guidedFilter_ab_gpu(double* depth, uint8_t* haveData, uint8_t*
+    haveDataAfter, double* a, double* b, int32_t* Ns, double* dSum, double*
+    dSqSum, double eps, uint32_t B, uint32_t w, uint32_t h);
+
 /*
  * template typespecifies the ouput data-type of the smoothed depth image
  * internally everything is double because of the integral images
@@ -144,7 +149,8 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   tLog.toctic(1,2);
 
   cudaStreamSynchronize(stream2);  // wait for stream 2 to finish
-  guidedFilter_ab_gpu(d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
+//  guidedFilter_ab_gpu(d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
+  guidedFilter_ab_gpu(d_depth.data(),d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
       d_dSum.data(), d_dSqSum.data(),eps_,B_,w_,h_);
   //    d_haveData2.get((uint8_t*)haveData.data,h_,w_); // get the valid data after
   //    cv::integral(haveData,Ns,CV_32S); // TODO hide transfer

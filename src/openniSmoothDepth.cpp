@@ -40,6 +40,7 @@ int main (int argc, char** argv)
   double eps = .5*.5;
   int32_t B = 10;
   if(vm.count("B")) B = vm["B"].as<int>();
+  if(vm.count("eps")) eps = vm["eps"].as<double>();
 
   findCudaDevice(argc,(const char**)argv);
   OpenniSmoothDepthGpu v(eps,B);
