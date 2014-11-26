@@ -296,7 +296,7 @@ __global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* have
     T epsT = eps;
     if(eps <= 0.)
     {
-      epsT = 0.0012+0.0019*(z-0.4)*(z-0.4) + 0.0001/sqrt(z); // leaving out the noise by angle
+      epsT = 0.0012+0.0019*(z-0.4)*(z-0.4)+0.0001/sqrt(z); // leaving out the noise by angle
       epsT *=5.;
       if(idx==300 && idy == 300)
         printf("eps=%f",epsT);
