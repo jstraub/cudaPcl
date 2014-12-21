@@ -66,7 +66,7 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
       if(frameN==0) system("mkdir ./normals/");
       char path[100];
       // Save the image data in binary format
-      sprintf(path,"./normals/%05d.png",frameN ++);
+      sprintf(path,"./normals/%05d.bin",frameN ++);
       imwriteBinary(std::string(path), normalsImg_);
     }
 
