@@ -35,6 +35,7 @@ int main (int argc, char** argv)
     ("eps,e", po::value<double>(), "sqrt of the epsilon parameter of the guided filter")
     ("B,b", po::value<int>(), "guided filter windows size (size will be (2B+1)x(2B+1))")
     ("compress,c", "compress the computed normals")
+//    ("out,o", po::value<std::string>(), "output path where surfae normal images are saved to")
     ;
 
   po::variables_map vm;
@@ -54,6 +55,8 @@ int main (int argc, char** argv)
   if(vm.count("eps")) eps = vm["eps"].as<double>();
   if(vm.count("B")) B = vm["B"].as<int>();
   if(vm.count("compress")) compress = true;
+//  std::string outPath = ""
+//  if(vm.count("out")) outPath = vm["out"].as<std::string>();
 
   findCudaDevice(argc,(const char**)argv);
   OpenniSmoothNormalsGpu v(f_d, eps, B, compress);

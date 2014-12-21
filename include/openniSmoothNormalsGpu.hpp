@@ -7,6 +7,7 @@
 #include <openniSmoothDepthGpu.hpp>
 #include <normalExtractSimpleGpu.hpp>
 
+#include <opencvHelper.hpp>
 
 /*
  * OpenniSmoothNormalsGpu smoothes the depth frame using a guided filter and
@@ -57,6 +58,18 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
     if(compress_){int32_t nComp =0; normalsComp_ = normalExtract->normalsComp(nComp); }
     nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr( new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
     normalsImg_ = normalExtract->normalsImg();
+
+
+    if(true)
+    {
+      static int frameN = 0;
+      if(frameN==0) system("mkdir ./normals/");
+      char path[100];
+      // Save the image data in binary format
+      sprintf(path,"./normals/%05d.png",frameN ++);
+      imwriteBinary(std::string(path), normalsImg_);
+    }
+
     this->update_ = true;
   };
 
