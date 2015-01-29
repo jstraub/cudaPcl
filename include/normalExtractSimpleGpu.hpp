@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <stdint.h>
+#include <algorithm>
 #include <Eigen/Dense>
 
 // CUDA runtime
@@ -253,7 +254,7 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
     {
       d_normalsComp_.resize(nComp_,3);
       // just shuffle the first 640 entries -> definitely sufficient to ge random init for the algfoerithms
-      std::random_shuffle(indMap_.begin(), indMap_.begin()+min(640,nComp_)); 
+      std::random_shuffle(indMap_.begin(), indMap_.begin() + std::min(640,nComp_)); 
       GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
       copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3); 
     }
