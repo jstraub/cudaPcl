@@ -262,8 +262,9 @@ template <class T>
 template <class T>
 void GpuMatrix<T>::get(T* A, uint32_t rows, uint32_t cols)
 {
-  assert(cols == cols_);
-  assert(rows == rows_);
+//  assert(cols == cols_);
+//  assert(rows == rows_);
+//  cout<<cols_*rows_<<" "<<cols_*rows_*sizeof(T)<<" "<<sizeof(T)<<endl;
   checkCudaErrors(cudaMemcpy(A,data_, cols_*rows_*sizeof(T),
                 cudaMemcpyDeviceToHost));
 };

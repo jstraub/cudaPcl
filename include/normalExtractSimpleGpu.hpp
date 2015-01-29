@@ -251,6 +251,7 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
     nComp_ = indMap_.size();
     if (nComp_ > 0)
     {
+      d_normalsComp_.resize(nComp_,3);
       // just shuffle the first 640 entries -> definitely sufficient to ge random init for the algfoerithms
       std::random_shuffle(indMap_.begin(), indMap_.begin()+min(640,nComp_)); 
       GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
@@ -452,7 +453,11 @@ cv::Mat NormalExtractSimpleGpu<float>::normalsComp(int32_t& nComp)
 {
   if(!nCachedComp_)
   {
-    normalsComp_ = cv::Mat(h_,w_,CV_32FC3);
+//    cout<<nComp_<<endl;
+    normalsComp_ = cv::Mat(nComp_,1,CV_32FC3);
+//    cout<<normalsComp_.total()<<" "
+//      <<normalsComp_.total()*normalsComp_.elemSize()<<" "
+//      <<normalsComp_.elemSize()<<endl;
     d_normalsComp_.get((float*)normalsComp_.data,nComp_,3);
     nCachedComp_ = true;
   }
@@ -465,7 +470,7 @@ cv::Mat NormalExtractSimpleGpu<double>::normalsComp(int32_t& nComp)
 {
   if(!nCachedComp_)
   {
-    normalsComp_ = cv::Mat(h_,w_,CV_64FC3);
+    normalsComp_ = cv::Mat(nComp_,1,CV_64FC3);
     d_normalsComp_.get((double*)normalsComp_.data,nComp_,3);
     nCachedComp_ = true;
   }

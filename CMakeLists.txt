@@ -26,6 +26,7 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -genc
 find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
+find_package (PCL REQUIRED)
 FIND_PACKAGE (Boost 1.52 REQUIRED)
 
 message(${EIGEN3_INCLUDE_DIR})
@@ -33,16 +34,18 @@ message(${CUDA_INCLUDE_DIRS})
 message(${CUDA_TOOLKIT_INCLUDE})
 message(${CUDA_TOOLKIT_ROOT_DIR})
 message(${Boost_LIBRARY_DIRS})
-message( ${CUDA_LIBRARIES})
+message(${CUDA_LIBRARIES})
+message(${PCL_INCLUDE_DIRS})
 
 include_directories(                                                            
   include
   ${EIGEN3_INCLUDE_DIR}                                       
+  ${PCL_INCLUDE_DIRS}                                       
   ${CUDA_TOOLKIT_INCLUDE}
   ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
   ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
   /usr/include                                        
-  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
+#  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
   /usr/include/ni
   /usr/include/vtk-5.8/
   ${Boost_INCLUDE_DIRS}
@@ -50,7 +53,7 @@ include_directories(
                                                                                 
 link_directories(
   ${Boost_LIBRARY_DIRS}
-  $ENV{WORKSPACE_HOME}/3rdparty/lib
+#  $ENV{WORKSPACE_HOME}/3rdparty/lib
 )
 
 add_executable(pclNormals ./src/pclNormals.cpp) 
