@@ -42,8 +42,9 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}                                       
   ${PCL_INCLUDE_DIRS}                                       
   ${CUDA_TOOLKIT_INCLUDE}
-  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
-  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
+  include/nvidia/
+#  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
+#  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
   /usr/include                                        
 #  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
   /usr/include/ni
@@ -68,7 +69,7 @@ cuda_add_executable(openniSmoothDepth ./src/openniSmoothDepth.cpp
   ./cuda/cuda_pcl_helpers.cu 
   ./cuda/integral.cu
   ./cuda/guidedFilter.cu
-  ./cuda/convolutionSeparable_wrap.cu
+  ./cuda/convolutionSeparable.cu
   ) 
 target_link_libraries (openniSmoothDepth boost_system boost_thread pcl_common
  boost_program_options
@@ -81,7 +82,7 @@ cuda_add_executable(openniSmoothNormals ./src/openniSmoothNormals.cpp
   ./cuda/cuda_pcl_helpers.cu 
   ./cuda/integral.cu
   ./cuda/guidedFilter.cu
-  ./cuda/convolutionSeparable_wrap.cu
+  ./cuda/convolutionSeparable.cu
   ) 
 target_link_libraries (openniSmoothNormals boost_system boost_thread pcl_common
  boost_program_options
@@ -101,7 +102,7 @@ cuda_add_library(cudaPcl SHARED
   ./cuda/integral.cu
   ./cuda/guidedFilter.cu
   ./src/pcl_helpers.cpp
-  ./cuda/convolutionSeparable_wrap.cu
+  ./cuda/convolutionSeparable.cu
   ./cuda/cuda_pcl_helpers.cu 
   ./cuda/bilateralFilter.cu
   ./cuda/optimizationSO3.cu
