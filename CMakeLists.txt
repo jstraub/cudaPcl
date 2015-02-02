@@ -27,15 +27,15 @@ find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
 find_package (PCL REQUIRED)
-FIND_PACKAGE (Boost 1.52 REQUIRED)
+FIND_PACKAGE (Boost 1.54 REQUIRED)
 
 message(${EIGEN3_INCLUDE_DIR})
 message(${CUDA_INCLUDE_DIRS})
 message(${CUDA_TOOLKIT_INCLUDE})
 message(${CUDA_TOOLKIT_ROOT_DIR})
-message(${Boost_LIBRARY_DIRS})
 message(${CUDA_LIBRARIES})
-message(${PCL_INCLUDE_DIRS})
+message(${Boost_LIBRARY_DIRS})
+#message(${PCL_INCLUDE_DIRS})
 
 include_directories(                                                            
   include
@@ -45,7 +45,8 @@ include_directories(
   include/nvidia/
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
-  /usr/include                                        
+#  /usr/include                                        
+#  $ENV{WORKSPACE_HOME}/3rdparty/include/
 #  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
   /usr/include/ni
   /usr/include/vtk-5.8/
@@ -84,8 +85,8 @@ cuda_add_executable(openniSmoothNormals ./src/openniSmoothNormals.cpp
   ./cuda/guidedFilter.cu
   ./cuda/convolutionSeparable.cu
   ) 
-target_link_libraries (openniSmoothNormals boost_system boost_thread pcl_common
- boost_program_options
+target_link_libraries (openniSmoothNormals 
+  boost_system boost_thread pcl_common boost_program_options
   opencv_core opencv_highgui opencv_contrib opencv_imgproc
   pcl_io pcl_visualization OpenNI XnVNite
   vtkCommon vtkFiltering vtkRendering 
