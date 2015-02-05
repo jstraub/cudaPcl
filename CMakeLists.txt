@@ -28,6 +28,7 @@ find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
 find_package (PCL REQUIRED)
 FIND_PACKAGE (Boost 1.54 REQUIRED)
+FIND_PACKAGE(OpenCL)                                                            
 
 message(${EIGEN3_INCLUDE_DIR})
 message(${CUDA_INCLUDE_DIRS})
@@ -46,16 +47,17 @@ include_directories(
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
 #  /usr/include                                        
-#  $ENV{WORKSPACE_HOME}/3rdparty/include/
 #  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
   /usr/include/ni
   /usr/include/vtk-5.8/
   ${Boost_INCLUDE_DIRS}
+  $ENV{WORKSPACE_HOME}/3rdparty/include/
+  $ENV{WORKSPACE_HOME}/3rdparty/include/libfreenect2/tinythread/
 )                                                                               
                                                                                 
 link_directories(
   ${Boost_LIBRARY_DIRS}
-#  $ENV{WORKSPACE_HOME}/3rdparty/lib
+  $ENV{WORKSPACE_HOME}/3rdparty/lib
 )
 
 add_executable(pclNormals ./src/pclNormals.cpp) 
@@ -91,6 +93,12 @@ target_link_libraries (openniSmoothNormals
   pcl_io pcl_visualization OpenNI XnVNite
   vtkCommon vtkFiltering vtkRendering 
   )
+
+#add_executable(freenect2Vis ./src/freenect2Visualizer.cpp) 
+#target_link_libraries (freenect2Vis 
+#  boost_system boost_thread freenect2 boost_program_options
+#  opencv_highgui opencv_core
+#  )
 
 add_executable(pclGrabber ./src/pclGrabber.cpp) 
 target_link_libraries (pclGrabber boost_system boost_thread pcl_common pcl_io pcl_visualization OpenNI XnVNite)
