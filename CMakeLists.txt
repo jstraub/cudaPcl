@@ -56,6 +56,7 @@ include_directories(
 )                                                                               
                                                                                 
 link_directories(
+  ${PCL_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIRS}
   $ENV{WORKSPACE_HOME}/3rdparty/lib
 )
