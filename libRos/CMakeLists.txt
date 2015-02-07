@@ -20,23 +20,28 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -genc
 find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
+find_package (PCL REQUIRED)
 
 include_directories(                                                            
   ../include
+  ../include/nvidia/
   ${EIGEN_INCLUDE_DIRS}                                                         
+  ${PCL_INCLUDE_DIRS}                                       
   ${CUDA_TOOLKIT_INCLUDE}
-  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
+#  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
   /usr/include                                                                  
   #$ENV{WORKSPACE_HOME}/3rdparty/include                                         
   #/usr/include/pcl-1.7/
   /usr/include/ni
   /usr/include/vtk-5.8/
-  /opt/ros/groovy/include/pcl-1.6/
+#  /opt/ros/groovy/include/pcl-1.6/
 )                                                                               
                                                                                 
 link_directories(
   #$ENV{WORKSPACE_HOME}/3rdparty/lib
-  /opt/ros/groovy/lib/
+#  /opt/ros/groovy/lib/
+  ${PCL_LIBRARY_DIRS}
+  ${Boost_LIBRARY_DIRS}
 )
 
 cuda_add_library(cudaPcl_ros SHARED
