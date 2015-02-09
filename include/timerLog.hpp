@@ -49,18 +49,29 @@ public:
     {
       for(int32_t i=0; i<static_cast<int32_t>(dts_.size()); ++i) 
       {
-        dts_[i] = this->getDtMs(t0s_[i],tE);
-        tSums_[i] += dts_[i];
-        tSquareSums_[i] += dts_[i]*dts_[i];
         Ns_[i] ++;
-        
+        dts_[i] = this->getDtMs(t0s_[i],tE);
+        if(Ns_[i] == it0_)
+        { // reset sums
+          tSums_[i] = 0.;
+          tSquareSums_[i] = 0.;
+        }else{
+          tSums_[i] += dts_[i];
+          tSquareSums_[i] += dts_[i]*dts_[i];
+        }
       }
     } else if( 0<= id && id < static_cast<int32_t>(t0s_.size()))
     {
-        dts_[id] = this->getDtMs(t0s_[id],tE);
-        tSums_[id] += dts_[id];
-        tSquareSums_[id] += dts_[id]*dts_[id];
         Ns_[id] ++;
+        dts_[id] = this->getDtMs(t0s_[id],tE);
+        if(Ns_[i] == it0_)
+        { // reset sums
+          tSums_[id] = 0.;
+          tSquareSums_[id] = 0.;
+        }else{
+          tSums_[id] += dts_[id];
+          tSquareSums_[id] += dts_[id]*dts_[id];
+        }
         return dts_[id];
     }
       return -1.;
@@ -74,7 +85,7 @@ public:
   virtual void logCycle()
   {
     if(!startLogging()) return;
-    for(uint32_t i=it0_; i<dts_.size()-1; ++i) 
+    for(uint32_t i=0; i<dts_.size()-1; ++i) 
     {
       fout_<<dts_[i]<<" ";
     }
@@ -91,8 +102,8 @@ public:
     double varTotal =0.;
     for(int32_t i=0; i<static_cast<int32_t>(dts_.size()); ++i) 
     {
-      double mean = tSums_[i]/Ns_[i];
-      double var = tSquareSums_[i]/Ns_[i] - mean*mean;
+      double mean = tSums_[i]/(Ns_[i]-it0_);
+      double var = tSquareSums_[i]/(Ns_[i]-it0_) - mean*mean;
       meanTotal += mean;
       varTotal += var;
       cout<<mean<<" +- "<<3.*sqrt(var)<<"\t";
