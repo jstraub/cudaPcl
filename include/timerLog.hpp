@@ -100,7 +100,7 @@ public:
     cout<<endl<<" => total/cycle: "<<meanTotal<<" +- "<<3.*sqrt(varTotal)<<endl;
   };
 
-  bool startLogging(){ 
+  virtual bool startLogging() const { 
     bool start = false;
     for(int32_t i=0; i<static_cast<int32_t>(dts_.size()); ++i)
       start |= Ns_[i] >= it0_;
