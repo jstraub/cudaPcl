@@ -17,8 +17,9 @@ using std::vector;
 class TimerLog : public Timer
 {
 public:
-  TimerLog(string path, uint32_t N, string name="Timer0") 
-    :  Timer(), path_(path), name_(name), fout_(path_.data(),ofstream::out), 
+  TimerLog(string path, uint32_t N, uint32_t it0 = 0, string name="Timer0") 
+    :  Timer(), path_(path), name_(name), it0_(it0),
+    fout_(path_.data(),ofstream::out), 
     t0s_(N), dts_(N,0),tSums_(N,0), tSquareSums_(N,0), Ns_(N,0) 
   {
     tic();
@@ -72,7 +73,8 @@ public:
 
   virtual void logCycle()
   {
-    for(uint32_t i=0; i<dts_.size()-1; ++i) 
+    if(dts_.size() <= it0_) return;
+    for(uint32_t i=it0_; i<dts_.size()-1; ++i) 
     {
       fout_<<dts_[i]<<" ";
     }
@@ -82,6 +84,7 @@ public:
 
   virtual void printStats()
   {
+    if(dts_.size() <= it0_) return;
     cout<<name_<<": stats over timer cycles (mean +- 3*std):\t";
     std::cout.precision(2);
     double meanTotal =0.;
@@ -101,6 +104,9 @@ private:
   string path_;
   string name_;
   ofstream fout_;
+
+  uint32_t it0_; // iteration after which we start statistics
+
   vector<timeval> t0s_; // starts for all timings
   vector<double> dts_; // dts
   vector<double> tSums_; // sum over the time
