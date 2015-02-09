@@ -73,7 +73,7 @@ public:
 
   virtual void logCycle()
   {
-    if(dts_.size() <= it0_) return;
+    if(!startLogging()) return;
     for(uint32_t i=it0_; i<dts_.size()-1; ++i) 
     {
       fout_<<dts_[i]<<" ";
@@ -84,7 +84,7 @@ public:
 
   virtual void printStats()
   {
-    if(dts_.size() <= it0_) return;
+    if(!startLogging()) return;
     cout<<name_<<": stats over timer cycles (mean +- 3*std):\t";
     std::cout.precision(2);
     double meanTotal =0.;
@@ -98,6 +98,13 @@ public:
       cout<<mean<<" +- "<<3.*sqrt(var)<<"\t";
     } 
     cout<<endl<<" => total/cycle: "<<meanTotal<<" +- "<<3.*sqrt(varTotal)<<endl;
+  };
+
+  bool startLogging(){ 
+    bool start = false;
+    for(int32_t i=0; i<static_cast<int32_t>(dts_.size()); ++i)
+      start |= Ns_[i] >= it0_;
+    return start;
   };
 
 private:
