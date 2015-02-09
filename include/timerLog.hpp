@@ -64,7 +64,7 @@ public:
     {
         Ns_[id] ++;
         dts_[id] = this->getDtMs(t0s_[id],tE);
-        if(Ns_[i] == it0_)
+        if(Ns_[id] == it0_)
         { // reset sums
           tSums_[id] = 0.;
           tSquareSums_[id] = 0.;
