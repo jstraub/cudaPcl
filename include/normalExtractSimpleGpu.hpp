@@ -258,7 +258,8 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
       GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
       copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3); 
     }
-    cout<<"compression of "<<T(w*h-nComp_)/T(w*h)<<"%"<<endl;
+    cout<<"compression of "<<T(w*h-nComp_)/T(w*h)<<"% to "
+      <<nComp_<<" datapoints"<<endl;
 };
 
 
