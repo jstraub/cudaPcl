@@ -395,19 +395,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc
   return n_cp_;
 };
 
-template<>
-cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
-{
-  if(!nCachedImg_)
-  {
-    nImg_ = cv::Mat(h_,w_,CV_32FC3);
-    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_ *sizeof(float)*3, 
-          cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaDeviceSynchronize());
-    nCachedImg_ = true;
-  }
-  return nImg_;
-};
 
 template<typename T>
 cv::Mat NormalExtractSimpleGpu<T>::haveData()
@@ -415,10 +402,10 @@ cv::Mat NormalExtractSimpleGpu<T>::haveData()
 //  if(!nCachedImg_)
 //  {
 
-//    cv::Mat haveData (h_,w_,CV_8U);
-    cv::Mat haveData = cv::Mat::ones(h_,w_,CV_8U)*2;
-    checkCudaErrors(cudaMemcpy(haveData.data, d_haveData_.data(), w_*h_ *sizeof(uint8_t), 
-          cudaMemcpyDeviceToHost));
+//    cv::Mat haveData = cv::Mat::ones(h_,w_,CV_8U)*2; // not necessary
+    cv::Mat haveData (h_,w_,CV_8U);
+    checkCudaErrors(cudaMemcpy(haveData.data, d_haveData_.data(), 
+          w_*h_ *sizeof(uint8_t), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 //    nCachedImg_ = true;
 //  }
@@ -435,6 +422,21 @@ cv::Mat NormalExtractSimpleGpu<T>::compInd()
 //    nCachedImg_ = true;
 //  }
   return compInd_;
+};
+
+template<>
+cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
+{
+  if(!nCachedImg_)
+  {
+    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
+    nImg_ = cv::Mat(h_,w_,CV_32FC3);
+    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_ *sizeof(float)*3, 
+          cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaDeviceSynchronize());
+    nCachedImg_ = true;
+  }
+  return nImg_;
 };
 
 template<>
