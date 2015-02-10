@@ -413,7 +413,9 @@ cv::Mat NormalExtractSimpleGpu<T>::haveData()
 {
 //  if(!nCachedImg_)
 //  {
-    cv::Mat haveData(h_,w_,CV_8U);
+
+//    cv::Mat haveData (h_,w_,CV_8U);
+    cv::Mat haveData = cv::Mat::ones(h_,w_,CV_8U)*2;
     checkCudaErrors(cudaMemcpy(haveData.data, d_haveData_.data(), w_*h_ *sizeof(uint8_t), 
           cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
