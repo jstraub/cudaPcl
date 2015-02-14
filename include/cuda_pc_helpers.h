@@ -39,6 +39,11 @@ void derivatives2normalsGPU(float* d_x, float* d_y, float* d_z,
     float* d_xv, float* d_yv, float* d_zv, 
     float* d_n, uint8_t* d_haveData, int w, int h);
 
+void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z, 
+    double* d_xu, double* d_yu, double* d_zu, 
+    double* d_xv, double* d_yv, double* d_zv, 
+    double* d_n, uint8_t* d_haveData, int w, int h);
+
 void derivatives2normalsCleanerGPU(float* d_x, float* d_y, float* d_z, 
     float* d_xu, float* d_yu, float* d_zu, 
     float* d_xv, float* d_yv, float* d_zv, 

@@ -39,6 +39,16 @@ void copyShuffleGPU(float* in, float* out, uint32_t* ind, int32_t N, int32_t ste
 void haveDataGpu(float* d_x, uint8_t* d_haveData, int32_t N, uint32_t step);
 void haveDataGpu(double* d_x, uint8_t* d_haveData, int32_t N, uint32_t step);
 
+void derivatives2normalsGPU(float* d_x, float* d_y, float* d_z, 
+    float* d_xu, float* d_yu, float* d_zu, 
+    float* d_xv, float* d_yv, float* d_zv, 
+    float* d_n, uint8_t* d_haveData, int w, int h);
+
+void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z, 
+    double* d_xu, double* d_yu, double* d_zu, 
+    double* d_xv, double* d_yv, double* d_zv, 
+    double* d_n, uint8_t* d_haveData, int w, int h);
+
 template<typename T>
 class NormalExtractSimpleGpu
 {
