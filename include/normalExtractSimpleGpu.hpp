@@ -49,6 +49,12 @@ void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z,
     double* d_xv, double* d_yv, double* d_zv, 
     double* d_n, uint8_t* d_haveData, int w, int h);
 
+void xyzImg2PointCloudXYZRGB(double* d_xyzImg, float* d_pclXYZRGB, int32_t w,
+    int32_t h);
+
+void xyzImg2PointCloudXYZRGB(float* d_xyzImg, float* d_pclXYZRGB, int32_t w,
+    int32_t h);
+
 template<typename T>
 class NormalExtractSimpleGpu
 {
