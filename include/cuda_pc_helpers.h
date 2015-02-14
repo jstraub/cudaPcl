@@ -26,8 +26,8 @@ void depth2xyzGPU(unsigned short* d, float* x, float* y, float* z,
 
 void depthFilterGPU(float* d, int w, int h);
 
-void depth2xyzFloatGPU(float* d, float* x, float* y, float* z,
-    float invF, int w, int h, float *xyz);
+//void depth2xyzFloatGPU(float* d, float* x, float* y, float* z,
+//    float invF, int w, int h, float *xyz);
 
 void derivatives2normalsPclGPU(float* d_x, float* d_y, float* d_z, 
     float* d_xu, float* d_yu, float* d_zu, 

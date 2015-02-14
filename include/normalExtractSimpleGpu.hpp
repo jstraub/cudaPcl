@@ -18,7 +18,7 @@
 #include <convolutionSeparable_common_small.h>
 
 #include <gpuMatrix.hpp>
-//#include <cuda_pc_helpers.h>
+#include <cuda_pc_helpers.h>
 
 using namespace Eigen;
 using std::cout;
