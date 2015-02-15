@@ -46,7 +46,8 @@ link_directories(
 
 cuda_add_library(cudaPcl_ros SHARED
   ../src/pcl_helpers.cpp
-  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/convolutionSeparable.cu 
+  ../cuda/convolutionSeparable.cu
+#  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/convolutionSeparable.cu 
 #  ../cuda/convolutionSeparable.cu 
 #  ../cuda/convolutionSeparable_small.cu 
   ../cuda/cuda_pcl_helpers.cu)

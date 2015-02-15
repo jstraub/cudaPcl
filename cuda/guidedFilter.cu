@@ -1,11 +1,11 @@
 /* Copyright (c) 2014, Julian Straub <jstraub@csail.mit.edu>
  * Licensed under the MIT license. See the license file LICENSE.
  */
-
-#include <helper_cuda.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <cudaPcl/helper_cuda.h>
 //#define BLK_SIZE 128
 
 template<typename T, int32_t B>

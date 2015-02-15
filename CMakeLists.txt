@@ -138,7 +138,7 @@ INSTALL(TARGETS cudaPcl #realtimeMF_openni
   ARCHIVE DESTINATION lib
   )
 
-install(DIRECTORY include/ DESTINATION include/cudaPcl/
+install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
           FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY include/ DESTINATION include/cudaPcl/
+install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
           FILES_MATCHING PATTERN "*.hpp")

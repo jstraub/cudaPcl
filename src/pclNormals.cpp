@@ -10,11 +10,12 @@
 #include <pcl/features/normal_3d.h>
 
 #include <boost/program_options.hpp>
+
 namespace po = boost::program_options;
 using std::cout;
 using std::endl;
 
-#include <timer.hpp>
+#include <cudaPcl/timer.hpp>
 
 int main (int argc, char** argv)
 {

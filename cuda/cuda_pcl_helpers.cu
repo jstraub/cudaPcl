@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 #include <assert.h>
-#include <helper_cuda.h> 
-#include <cuda_pc_helpers.h>
+#include <cudaPcl/helper_cuda.h> 
+#include <cudaPcl/cuda_pc_helpers.h>
 
 
 /*

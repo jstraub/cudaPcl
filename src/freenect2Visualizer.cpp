@@ -9,7 +9,8 @@
 #include <boost/program_options.hpp>
 
 #include <Eigen/Dense>
-#include <freenect2Grabber.hpp>
+
+#include <cudaPcl/freenect2Grabber.hpp>
 
 namespace po = boost::program_options;
 using namespace Eigen;

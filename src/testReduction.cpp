@@ -9,9 +9,9 @@
 // CUDA runtime
 #include <cuda_runtime.h>
 // Utilities and system includes
-#include <helper_cuda.h>
+#include <cudaPcl/helper_cuda.h>
 
-#include <timer.hpp>
+#include <cudaPcl/timer.hpp>
 
 using namespace Eigen;
 using namespace std;

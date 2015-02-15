@@ -2,9 +2,9 @@
  * Licensed under the MIT license. See the license file LICENSE.
  */
 
-#include <helper_cuda.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <cudaPcl/helper_cuda.h>
 //#define BLK_SIZE 128
 
 template<typename T, uint32_t BLK_SIZE>

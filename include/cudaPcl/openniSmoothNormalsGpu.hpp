@@ -6,7 +6,7 @@
 
 #include <cudaPcl/openniSmoothDepthGpu.hpp>
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
-#include <cudaPcl/opencvHelper.hpp>
+#include <cudaPcl/cv_helpers.hpp>
 
 /*
  * OpenniSmoothNormalsGpu smoothes the depth frame using a guided filter and

@@ -9,7 +9,7 @@
 #include <boost/program_options.hpp>
 
 #include <Eigen/Dense>
-#include <openniSmoothDepthGpu.hpp>
+#include <cudaPcl/openniSmoothDepthGpu.hpp>
 
 namespace po = boost::program_options;
 using namespace Eigen;

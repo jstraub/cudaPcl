@@ -12,8 +12,8 @@
 
 
 #include <assert.h>
-#include <helper_cuda.h>
-#include "convolutionSeparable_common.h"
+#include <cudaPcl/helper_cuda.h>
+#include <cudaPcl/convolutionSeparable_common.h>
 
 
 

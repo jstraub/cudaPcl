@@ -2,11 +2,11 @@
  * Licensed under the MIT license. See the license file LICENSE.
  */
 
-#include <helper_cuda.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <cudaSphereHelpers.h>
+#include <cudaPcl/helper_cuda.h>
+#include <cudaPcl/cudaSphereHelpers.h>
 
 #define BLOCK_WIDTH 16
 #define BLOCK_SIZE BLOCK_WIDTH*BLOCK_WIDTH

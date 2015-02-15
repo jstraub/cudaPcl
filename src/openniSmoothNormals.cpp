@@ -14,9 +14,9 @@
 #include <opencv2/contrib/contrib.hpp>
 
 #include <Eigen/Dense>
-#include <openniSmoothDepth.hpp>
-#include <openniSmoothDepthGpu.hpp>
-#include <openniSmoothNormalsGpu.hpp>
+#include <cudaPcl/openniSmoothDepth.hpp>
+#include <cudaPcl/openniSmoothDepthGpu.hpp>
+#include <cudaPcl/openniSmoothNormalsGpu.hpp>
 
 namespace po = boost::program_options;
 using namespace Eigen;
