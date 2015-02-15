@@ -8,6 +8,8 @@
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
 #include <cudaPcl/cv_helpers.hpp>
 
+namespace cudaPcl {
+
 /*
  * OpenniSmoothNormalsGpu smoothes the depth frame using a guided filter and
  * computes surface normals from it also on the GPU.
@@ -19,7 +21,8 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
 {
   public:
   OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool compress=false) 
-    : OpenniSmoothDepthGpu(eps,B), f_d_(f_d), normalExtract(NULL) ,compress_(compress)
+    : OpenniSmoothDepthGpu(eps,B), f_d_(f_d), normalExtract(NULL)
+      ,compress_(compress)
   { };
 
   virtual ~OpenniSmoothNormalsGpu() 
@@ -51,18 +54,24 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
    */
   virtual void normals_cb(float* d_normalsImg, uint8_t* d_haveData, uint32_t w, uint32_t h)
   {
-    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr nDispPtr = normalExtract->normalsPc();
+    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr nDispPtr =
+      normalExtract->normalsPc();
 
     boost::mutex::scoped_lock updateLock(updateModelMutex);
-    if(compress_){int32_t nComp =0; normalsComp_ = normalExtract->normalsComp(nComp); }
-    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr( new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
+    if(compress_)
+    {
+      int32_t nComp =0; 
+      normalsComp_ = normalExtract->normalsComp(nComp); 
+    }
+    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr( 
+        new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
     normalsImg_ = normalExtract->normalsImg();
-
 
     if(true)
     {
       static int frameN = 0;
-      if(frameN==0) system("mkdir ./normals/");
+      if(frameN==0) if(system("mkdir ./normals/") >0){cout<<"problem creating subfolder for results"<<endl;};
+
       char path[100];
       // Save the image data in binary format
       sprintf(path,"./normals/%05d.bin",frameN ++);
@@ -71,7 +80,6 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
       else
         imwriteBinary(std::string(path), normalsImg_);
     }
-
     this->update_ = true;
   };
 
@@ -126,4 +134,4 @@ void OpenniSmoothNormalsGpu::visualizePc()
   if(!this->viewer_->updatePointCloud(pc_, "pc"))
     this->viewer_->addPointCloud(pc_, "pc");
 }
-
+}

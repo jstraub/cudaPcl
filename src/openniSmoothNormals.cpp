@@ -59,7 +59,7 @@ int main (int argc, char** argv)
 //  if(vm.count("out")) outPath = vm["out"].as<std::string>();
 
   findCudaDevice(argc,(const char**)argv);
-  OpenniSmoothNormalsGpu v(f_d, eps, B, compress);
+  cudaPcl::OpenniSmoothNormalsGpu v(f_d, eps, B, compress);
 
   if(false)
   { // load a specific image and process

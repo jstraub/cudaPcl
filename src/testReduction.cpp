@@ -30,7 +30,7 @@ int main(int argc, char ** argv)
   checkCudaErrors(cudaMalloc((void **)&d_mu, 6*4*sizeof(float)));
   checkCudaErrors(cudaMalloc((void **)&d_dbg, 256*sizeof(float)));
 
-  Timer t0;
+  cudaPcl::Timer t0;
   for(uint32_t i=0; i< 1000; ++i)
     reduction(mu.data(),d_mu,dbg.data(),d_dbg,0);
   t0.toctic("100 times old");

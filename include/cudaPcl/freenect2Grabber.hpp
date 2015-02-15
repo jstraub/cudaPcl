@@ -11,6 +11,8 @@
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/threading.h>
 
+namespace cudaPcl {
+
 /*
  * Class for obtaining frames via freenect2 via two callbacks: depth_cb as well as
  * rgb_cb
@@ -105,3 +107,4 @@ protected:
     uint32_t w_,h_;
   private:
 };
+}

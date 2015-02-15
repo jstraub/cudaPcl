@@ -17,6 +17,7 @@ using std::endl;
 using std::min;
 using std::max;
 
+namespace cudaPcl {
 /*
  * OpenniSmoothDepth smoothes the depth frame using a guided filter making on
  * the CPU in about 30ms.
@@ -127,3 +128,4 @@ class OpenniSmoothDepth : public OpenniVisualizer
   };
 };
 
+}

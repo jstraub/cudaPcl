@@ -43,7 +43,7 @@ int main (int argc, char** argv)
   if(vm.count("eps")) eps = vm["eps"].as<double>();
 
   findCudaDevice(argc,(const char**)argv);
-  OpenniSmoothDepthGpu v(eps,B);
+  cudaPcl::OpenniSmoothDepthGpu v(eps,B);
   v.run ();
   cout<<cudaDeviceReset()<<endl;
   return (0);

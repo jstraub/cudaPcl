@@ -35,6 +35,8 @@ void guidedFilter_ab_gpu(double* depth, uint8_t* haveData, uint8_t*
     haveDataAfter, double* a, double* b, int32_t* Ns, double* dSum, double*
     dSqSum, double eps, uint32_t B, uint32_t w, uint32_t h);
 
+namespace cudaPcl {
+
 /*
  * template typespecifies the ouput data-type of the smoothed depth image
  * internally everything is double because of the integral images
@@ -205,3 +207,4 @@ cv::Mat DepthGuidedFilterGpu<double>::getOutput()
 //  d_depthSmooth.get((T*)dSmooth.data,h_,w_);
 //  return dSmooth;
 //};
+}

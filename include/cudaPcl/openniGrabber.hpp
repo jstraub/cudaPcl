@@ -12,6 +12,8 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
+namespace cudaPcl {
+
 /*
  * Class for obtaining frames via openni via two callbacks: depth_cb as well as
  * rgb_cb
@@ -98,3 +100,4 @@ protected:
   private:
     pcl::Grabber* interface_;
 };
+}

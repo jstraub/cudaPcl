@@ -14,6 +14,8 @@ using std::endl;
 using std::ostream;
 using std::string;
 
+namespace cudaPcl {
+
 class Timer
 {
 public:
@@ -62,6 +64,7 @@ public:
     if(this != &t){
       dt_=t.lastDt();
     }
+    return *this;
   };
 
 protected:
@@ -88,5 +91,5 @@ inline ostream& operator<<(ostream &out, const Timer& t)
   out << t.lastDt() << "ms";
   return out;
 };
-
+}
 #endif /* TIMER_HPP_ */

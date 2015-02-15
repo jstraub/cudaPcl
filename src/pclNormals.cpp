@@ -65,7 +65,7 @@ int main (int argc, char** argv)
 
   int w = cloud->width;
   int h = cloud->height;
-  cout<<cloud->width << "x"<<cloud->height<<endl;
+  cout<<w << "x"<<h<<endl;
 
 //  cloud->points[10+w*10] = pcl::PointXYZ(1.0,2.0,3.0);
 //  cout<<cloud->points.data()<<endl;
@@ -76,7 +76,7 @@ int main (int argc, char** argv)
   // estimate normals on a organized point cloud
   if(false)
   {
-    Timer t0;
+    cudaPcl::Timer t0;
     pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
     pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     ne.setNormalEstimationMethod (ne.AVERAGE_3D_GRADIENT); // 31ms
@@ -90,7 +90,7 @@ int main (int argc, char** argv)
     cout<<t0<<endl;
   }
 
-  Timer t0;
+  cudaPcl::Timer t0;
   pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
 //  ne.setNormalEstimationMethod (ne.AVERAGE_3D_GRADIENT); // 31ms

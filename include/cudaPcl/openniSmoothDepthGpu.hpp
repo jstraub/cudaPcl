@@ -14,6 +14,8 @@
 using std::cout;
 using std::endl;
 
+namespace cudaPcl {
+
 /*
  * OpenniSmoothDepthGpu smoothes the depth frame using a guided filter making
  * use of a GPU in less than 10ms.
@@ -59,4 +61,4 @@ class OpenniSmoothDepthGpu : public OpenniVisualizer
   DepthGuidedFilterGpu<float> * depthFilter;
 
 };
-
+}

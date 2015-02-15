@@ -36,7 +36,7 @@ int main (int argc, char** argv)
     return 1;
   }
 
-  Freenect2Grabber v;
+  cudaPcl::Freenect2Grabber v;
   v.run ();
   return (0);
 }

@@ -25,6 +25,8 @@ extern void copy_gpu( float *d_from, float *d_to , uint32_t N,
 extern void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
 
+namespace cudaPcl {
+
 template <class T>
 struct GpuMatrix
 {
@@ -350,3 +352,4 @@ void GpuMatrix<T>::getAsync(T* A, uint32_t rows, uint32_t cols, cudaStream_t& st
 };
 
 
+}

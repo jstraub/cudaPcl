@@ -53,6 +53,8 @@ void xyzImg2PointCloudXYZRGB(double* d_xyzImg, float* d_pclXYZRGB, int32_t w,
 void xyzImg2PointCloudXYZRGB(float* d_xyzImg, float* d_pclXYZRGB, int32_t w,
     int32_t h);
 
+namespace cudaPcl {
+
 template<typename T>
 class NormalExtractSimpleGpu
 {
@@ -522,3 +524,4 @@ cv::Mat NormalExtractSimpleGpu<double>::normalsComp(int32_t& nComp)
 ////  }
 //  return pc_cp_;
 //};
+}

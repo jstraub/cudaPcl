@@ -24,6 +24,8 @@
 using std::cout;
 using std::endl;
 
+namespace cudaPcl {
+
 /*
  * OpenniVisualizer visualizes the RGB and depth frame and adds a visualizer
  * for a point-cloud using pcl (but does not display anything). 
@@ -168,4 +170,4 @@ cv::Mat OpenniVisualizer::colorizeDepth(const cv::Mat& dMap)
   cv::applyColorMap(d8Bit,dColor,cv::COLORMAP_JET);
   return dColor;
 }
-
+}
