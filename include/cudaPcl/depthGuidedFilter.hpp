@@ -7,9 +7,9 @@
 #include <stdint.h>
 #include <math.h>
 
-#include <timer.hpp>
-#include <timerLog.hpp>
-#include <gpuMatrix.hpp>
+#include <cudaPcl/timer.hpp>
+#include <cudaPcl/timerLog.hpp>
+#include <cudaPcl/gpuMatrix.hpp>
 
 using std::cout;
 using std::endl;

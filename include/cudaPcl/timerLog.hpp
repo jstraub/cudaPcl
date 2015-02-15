@@ -8,7 +8,7 @@
 #include <fstream>
 #include <vector>
 
-#include <timer.hpp>
+#include <cudaPcl/timer.hpp>
 
 using std::string;
 using std::ofstream;

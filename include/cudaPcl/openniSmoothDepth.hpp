@@ -7,9 +7,9 @@
 #include <iostream>
 #include <stdint.h>
 #include <math.h>
-#include <openniVisualizer.hpp>
 
-#include <timer.hpp>
+#include <cudaPcl/openniVisualizer.hpp>
+#include <cudaPcl/timer.hpp>
 
 using std::cout;
 using std::endl;

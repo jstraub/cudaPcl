@@ -9,7 +9,7 @@
 #include <Eigen/Dense>
 
 #include <cuda_runtime.h>
-#include <helper_cuda.h> 
+#include <cudaPcl/helper_cuda.h> 
 
 //#include "global.hpp"
 

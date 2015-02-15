@@ -16,7 +16,7 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <openniGrabber.hpp>
+#include <cudaPcl/openniGrabber.hpp>
 
 #pragma GCC system_header
 #include <pcl/visualization/cloud_viewer.h>

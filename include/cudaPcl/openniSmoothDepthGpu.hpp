@@ -8,8 +8,8 @@
 #include <stdint.h>
 #include <math.h>
 
-#include <openniVisualizer.hpp>
-#include <depthGuidedFilter.hpp>
+#include <cudaPcl/openniVisualizer.hpp>
+#include <cudaPcl/depthGuidedFilter.hpp>
 
 using std::cout;
 using std::endl;

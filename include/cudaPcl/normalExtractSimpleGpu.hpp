@@ -10,15 +10,13 @@
 
 // CUDA runtime
 #include <cuda_runtime.h>
-#include <helper_cuda.h>
 
-#include <root_includes.hpp>
-
+#include <cudaPcl/helper_cuda.h>
+#include <cudaPcl/root_includes.hpp>
 //#include <convolutionSeparable_common.h>
-#include <convolutionSeparable_common_small.h>
-
-#include <gpuMatrix.hpp>
-#include <cuda_pc_helpers.h>
+#include <cudaPcl/convolutionSeparable_common_small.h>
+#include <cudaPcl/gpuMatrix.hpp>
+#include <cudaPcl/cuda_pc_helpers.h>
 
 using namespace Eigen;
 using std::cout;
