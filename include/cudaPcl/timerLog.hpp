@@ -16,11 +16,11 @@ using std::vector;
 
 namespace cudaPcl {
 
-class TimerLog : public Timer
+class TimerLog : public cudaPcl::Timer
 {
 public:
   TimerLog(string path, uint32_t N, uint32_t it0 = 0, string name="Timer0") 
-    :  Timer(), path_(path), name_(name), 
+    :  cudaPcl::Timer(), path_(path), name_(name), 
     fout_(path_.data(),ofstream::out), it0_(it0),
     t0s_(N), dts_(N,0),tSums_(N,0), tSquareSums_(N,0), Ns_(N,0) 
   {
