@@ -47,6 +47,11 @@ void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z,
     double* d_xv, double* d_yv, double* d_zv, 
     double* d_n, uint8_t* d_haveData, int w, int h);
 
+void derivatives2normalsGPU(float* d_z, float* d_zu, float* d_zv, float* d_n,
+    uint8_t* d_haveData, float invF, int w, int h);
+void derivatives2normalsGPU(double* d_z, double* d_zu, double* d_zv, double*
+    d_n, uint8_t* d_haveData, double invF, int w, int h);
+
 void xyzImg2PointCloudXYZRGB(double* d_xyzImg, float* d_pclXYZRGB, int32_t w,
     int32_t h);
 
@@ -203,11 +208,13 @@ void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32
   // obtain derivatives using sobel 
   computeDerivatives(w_,h_);
   // obtain the normals using mainly cross product on the derivatives
-  derivatives2normalsGPU(
-      d_x,d_y,d_z,
-      d_xu,d_yu,d_zu,
-      d_xv,d_yv,d_zv,
-      d_nImg_.data(),d_haveData_.data(),w_,h_);
+//  derivatives2normalsGPU(
+//      d_x,d_y,d_z,
+//      d_xu,d_yu,d_zu,
+//      d_xv,d_yv,d_zv,
+//      d_nImg_.data(),d_haveData_.data(),w_,h_);
+  derivatives2normalsGPU( d_z, d_zu, d_zv,
+      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
   nCachedPc_ = false;
   nCachedImg_ = false;
   pcComputed_ = false;
@@ -225,11 +232,13 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
   // obtain derivatives using sobel 
   computeDerivatives(w_,h_);
   // obtain the normals using mainly cross product on the derivatives
-  derivatives2normalsGPU(
-      d_x,d_y,d_z,
-      d_xu,d_yu,d_zu,
-      d_xv,d_yv,d_zv,
-      d_nImg_.data(),d_haveData_.data(),w_,h_);
+//  derivatives2normalsGPU(
+//      d_x,d_y,d_z,
+//      d_xu,d_yu,d_zu,
+//      d_xv,d_yv,d_zv,
+//      d_nImg_.data(),d_haveData_.data(),w_,h_);
+  derivatives2normalsGPU( d_z, d_zu, d_zv,
+      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
   nCachedPc_ = false;
   nCachedImg_ = false;
   pcComputed_ = false;
