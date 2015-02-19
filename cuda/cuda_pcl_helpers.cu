@@ -454,6 +454,86 @@ void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z,
   getLastCudaError("derivatives2normalsGPU() execution failed\n");
 }
 
+// derivative of depth image to surface normals
+template<typename T>
+__global__ void derivatives2normals(T* d_z, 
+    T* d_zu, T* d_zv, T* d_n, uint8_t* d_haveData, T f_d, int w, int h)
+{
+  const int idx = threadIdx.x + blockIdx.x*blockDim.x;
+  const int idy = threadIdx.y + blockIdx.y*blockDim.y;
+  const int id = idx+w*idy;
+
+  if(idx<w && idy<h)
+  {
+    // in combination with the depth to xyz computation this gives the right normals
+    T z  = d_z[id];
+    T zu = d_zu[id];
+    T zv = d_zv[id];
+    T* d_ni = d_n+id*3;
+    if (d_haveData && (z != z || zu!=zu || zv!=zv))
+    {
+      d_haveData[id] = 0; 
+      d_ni[0] = 0.0/0.0;
+      d_ni[1] = 0.0/0.0;
+      d_ni[2] = 0.0/0.0;
+    }else{
+
+      T nx = yu*zv - yv*zu;
+      T ny = xv*zu - xu*zv;
+      T nz = xu*yv - xv*yu;
+      T lenn = sqrtf(nx*nx + ny*ny + nz*nz);
+      T sgn = signf(d_x[id]*nx + d_y[id]*ny + d_z[id]*nz)/lenn;
+    // normals are pointing away from where the kinect sensor is
+    // ie. if pointed at the ceiling the normals will be (0,0,1)
+    // the coordinate system is aligned with the image coordinates:
+    // z points outward to the front 
+    // x to the right (when standing upright on the foot and looking from behind)
+    // y down (when standing upright on the foot and looking from behind)
+//    if (absf(ny)<0.01f || absf(nx)<0.01f)
+//{
+//  nx=0.0f/0.0f;
+//  ny=0.0f/0.0f;
+//  nz=0.0f/0.0f;
+//} 
+
+      d_ni[0] = nx*sgn;
+      d_ni[1] = ny*sgn;
+      d_ni[2] = nz*sgn;
+      if(d_haveData)
+        d_haveData[id] = (sgn!=sgn || (nx!=nx) || (ny!=ny) || (nz!=nz))?0:1;
+    // f!=f only true for nans
+    }
+  }
+}
+
+
+void derivatives2normalsGPU(float* d_x, float* d_y, float* d_z, 
+    float* d_xu, float* d_yu, float* d_zu, 
+    float* d_xv, float* d_yv, float* d_zv, 
+    float* d_n, uint8_t* d_haveData, int w, int h)
+{
+  dim3 threads(16,16,1);
+  dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
+  derivatives2normals<<<blocks, threads>>>(d_x,d_y,d_z,
+      d_xu,d_yu,d_zu,
+      d_xv,d_yv,d_zv,
+      d_n,d_haveData,w,h);
+  getLastCudaError("derivatives2normalsGPU() execution failed\n");
+}
+void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z, 
+    double* d_xu, double* d_yu, double* d_zu, 
+    double* d_xv, double* d_yv, double* d_zv, 
+    double* d_n, uint8_t* d_haveData, int w, int h)
+{
+  dim3 threads(16,16,1);
+  dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
+  derivatives2normals<<<blocks, threads>>>(d_x,d_y,d_z,
+      d_xu,d_yu,d_zu,
+      d_xv,d_yv,d_zv,
+      d_n,d_haveData,w,h);
+  getLastCudaError("derivatives2normalsGPU() execution failed\n");
+}
+
 /*
  * derivatives2normals takes pointers to all derivatives and fills in d_n
  * d_n is a w*h*3 array for all three normal components (x,y,z)
