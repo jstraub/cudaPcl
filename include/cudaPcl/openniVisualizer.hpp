@@ -18,11 +18,19 @@
 
 #include <cudaPcl/openniGrabber.hpp>
 
-#pragma GCC system_header
-#include <pcl/visualization/cloud_viewer.h>
+//#define USE_PCL_VIEWER
+
+//#include <pcl/point_cloud.h>
+//#include <pcl/impl/point_types.hpp>
+#include <pcl/common/common_headers.h>
+#ifdef USE_PCL_VIEWER
+  #pragma GCC system_header
+  #include <pcl/visualization/cloud_viewer.h>
+#endif
 
 using std::cout;
 using std::endl;
+
 
 namespace cudaPcl {
 
@@ -62,7 +70,7 @@ protected:
   virtual void visualize_();
   virtual void visualizeRGB();
   virtual void visualizeD();
-  virtual void visualizePc();
+  virtual void visualizeNormals();
 
   virtual void rgb_cb_ (const boost::shared_ptr<openni_wrapper::Image>& rgb)
   {
@@ -80,7 +88,9 @@ protected:
 //    update_=true; // only depth updates! otherwise we get weird artifacts.
   }
 
+#ifdef USE_PCL_VIEWER
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
+#endif
 private:
   void visualizerThread();
 };
@@ -91,7 +101,7 @@ void OpenniVisualizer::visualize_()
 {
   visualizeRGB();
   visualizeD();
-  visualizePc();
+  visualizeNormals();
 };
 
 void OpenniVisualizer::visualizeRGB()
@@ -106,14 +116,17 @@ void OpenniVisualizer::visualizeD()
     cv::imshow("d",dColor_);
 };
 
-void OpenniVisualizer::visualizePc()
+void OpenniVisualizer::visualizeNormals()
 {
+#ifdef USE_PCL_VIEWER
   if(!viewer_->updatePointCloud(pc_, "pc"))
     viewer_->addPointCloud(pc_, "pc");
+#endif
 }
 
 void OpenniVisualizer::visualizerThread()
 {
+#ifdef USE_PCL_VIEWER
   // prepare visualizer named "viewer"
   viewer_ = boost::shared_ptr<pcl::visualization::PCLVisualizer>(
       new pcl::visualization::PCLVisualizer ("3D Viewer"));
@@ -135,6 +148,19 @@ void OpenniVisualizer::visualizerThread()
       update_ = false;
     }
   }
+#else
+  while (42)
+  {
+    cv::waitKey(10);
+    // Get lock on the boolean update and check if cloud was updated
+    boost::mutex::scoped_lock updateLock(updateModelMutex);
+    if (update_)
+    {
+      visualize_();
+      update_ = false;
+    }
+  }
+#endif
 }
 
 void OpenniVisualizer::run ()

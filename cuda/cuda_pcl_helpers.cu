@@ -335,10 +335,14 @@ __global__ void xyzImg2PointCloudXYZRGB(T* xyzImg, float* pclXYZRGB, int32_t w,
 
   if(idx<w && idy<h)
   {
-    pclXYZRGB[id*X_STEP+X_OFFSET]   = (float) xyzImg[id*3];
-    pclXYZRGB[id*X_STEP+X_OFFSET+1] = (float) xyzImg[id*3+1];
-    pclXYZRGB[id*X_STEP+X_OFFSET+2] = (float) xyzImg[id*3+2];
-    pclXYZRGB[id*X_STEP+X_OFFSET+3] = 1.0f;
+    pclXYZRGB[id*8]   = (float) xyzImg[id*3];
+    pclXYZRGB[id*8+1] = (float) xyzImg[id*3+1];
+    pclXYZRGB[id*8+2] = (float) xyzImg[id*3+2];
+    pclXYZRGB[id*8+3] = 1.0f;
+    pclXYZRGB[id*8+4] = 0.0f;
+    pclXYZRGB[id*8+5] = 0.0f;
+    pclXYZRGB[id*8+6] = 0.0f;
+    pclXYZRGB[id*8+7] = 1.0f;
   }
 }
 
@@ -481,12 +485,19 @@ __global__ void derivatives2normals(T* d_z, T* d_zu, T* d_zv, T* d_n, uint8_t*
       d_ni[1] = 0.0/0.0;
       d_ni[2] = 0.0/0.0;
     }else{
-      T zInvF = z*invF;
-      T nx = zu*zInvF;
-      T ny = zv*zInvF;
-      T nz = (du*zv+dv*zu+z)*zInvF*invF;
+//      T zInvF = z*invF;
+//      T nx = zu*zInvF;
+//      T ny = zv*zInvF;
+//      T nz = (du*zu+dv*zv+z)*zInvF*invF;
+//      T zInvF = z*invF;
+      T nx = zu; // zInvF is going to be taken care of by normalizer anyway
+      T ny = zv;
+      T nz = (du*zu+dv*zv+z)*invF;
       T lenn = sqrtf(nx*nx + ny*ny + nz*nz);
       T sgn = 1./lenn;
+
+
+//      T sgn = 1.;
 //      T sgn = signf(d_x[id]*nx + d_y[id]*ny + d_z[id]*nz)/lenn;
 
     // normals are pointing away from where the kinect sensor is

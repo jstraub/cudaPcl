@@ -84,7 +84,7 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
   };
 
   virtual void visualizeD();
-  virtual void visualizePc();
+  virtual void visualizeNormals();
 
   protected:
   double f_d_;
@@ -105,11 +105,8 @@ void OpenniSmoothNormalsGpu::visualizeD()
   }
 };
 
-void OpenniSmoothNormalsGpu::visualizePc()
+void OpenniSmoothNormalsGpu::visualizeNormals()
 {
-  //copy again
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr nDisp(
-      new pcl::PointCloud<pcl::PointXYZRGB>(*nDisp_));
 //  cv::Mat nI(nDisp->height,nDisp->width,CV_32FC3); 
 //  for(uint32_t i=0; i<nDisp->width; ++i)
 //    for(uint32_t j=0; j<nDisp->height; ++j)
@@ -128,10 +125,15 @@ void OpenniSmoothNormalsGpu::visualizePc()
 
   if (compress_)  cv::imshow("dcomp",normalsComp_);
 
+#ifdef USE_PCL_VIEWER
+  //copy again
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr nDisp(
+      new pcl::PointCloud<pcl::PointXYZRGB>(*nDisp_));
   this->pc_ = nDisp;
 //  this->pc_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(nDisp);
   
   if(!this->viewer_->updatePointCloud(pc_, "pc"))
     this->viewer_->addPointCloud(pc_, "pc");
+#endif
 }
 }

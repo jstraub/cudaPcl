@@ -302,21 +302,29 @@ void NormalExtractSimpleGpu<T>::uncompressCpu(const uint32_t* in, uint32_t Nin,
 template<typename T>
 void NormalExtractSimpleGpu<T>::computeDerivatives(uint32_t w,uint32_t h)
 {
+//  // TODO could reorder stuff here
+//  setConvolutionKernel(h_sobel_dif);
+////  convolutionRowsGPU(a,d_x,w,h);
+////  convolutionRowsGPU(b,d_y,w,h);
+//  convolutionRowsGPU(c,d_z,w,h);
+//  setConvolutionKernel(h_sobel_sum);
+////  convolutionColumnsGPU(d_xu,a,w,h);
+////  convolutionColumnsGPU(d_yu,b,w,h);
+//  convolutionColumnsGPU(d_zu,c,w,h);
+////  convolutionRowsGPU(a,d_x,w,h);
+////  convolutionRowsGPU(b,d_y,w,h);
+//  convolutionRowsGPU(c,d_z,w,h);
+//  setConvolutionKernel(h_sobel_dif);
+////  convolutionColumnsGPU(d_xv,a,w,h);
+////  convolutionColumnsGPU(d_yv,b,w,h);
+//  convolutionColumnsGPU(d_zv,c,w,h);
+
   setConvolutionKernel(h_sobel_dif);
-  convolutionRowsGPU(a,d_x,w,h);
-  convolutionRowsGPU(b,d_y,w,h);
+  convolutionColumnsGPU(b,d_z,w,h);
   convolutionRowsGPU(c,d_z,w,h);
   setConvolutionKernel(h_sobel_sum);
-  convolutionColumnsGPU(d_xu,a,w,h);
-  convolutionColumnsGPU(d_yu,b,w,h);
+  convolutionRowsGPU(d_zv,b,w,h);
   convolutionColumnsGPU(d_zu,c,w,h);
-  convolutionRowsGPU(a,d_x,w,h);
-  convolutionRowsGPU(b,d_y,w,h);
-  convolutionRowsGPU(c,d_z,w,h);
-  setConvolutionKernel(h_sobel_dif);
-  convolutionColumnsGPU(d_xv,a,w,h);
-  convolutionColumnsGPU(d_yv,b,w,h);
-  convolutionColumnsGPU(d_zv,c,w,h);
 }
 
 
@@ -342,7 +350,7 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
   checkCudaErrors(cudaMalloc((void **)&d_y, w * h * sizeof(T)));
   checkCudaErrors(cudaMalloc((void **)&d_z, w * h * sizeof(T)));
 
-  checkCudaErrors(cudaMalloc((void **)&d_nPcl, w * h * X_STEP* sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_nPcl, w * h *8* sizeof(float)));
   checkCudaErrors(cudaMalloc((void **)&d_xyz, w * h * 4* sizeof(T)));
 
   checkCudaErrors(cudaMalloc((void **)&d_xu, w * h * sizeof(T)));
@@ -372,16 +380,16 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
   n_ = pcl::PointCloud<pcl::PointXYZRGB>(w,h);
   n_cp_ = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(&n_);
   Map<MatrixXf, Aligned, OuterStride<> > nMat = 
-    n_.getMatrixXfMap(X_STEP,X_STEP,0);
+    n_.getMatrixXfMap(8,8,0);
   h_nPcl = nMat.data();//(T *)malloc(w *h *3* sizeof(T));
 
-  cout<<nMat.rows()<< " "<<nMat.cols()<<" "<<X_STEP<<endl;
+  cout<<nMat.rows()<< " "<<nMat.cols()<<" "<<8<<endl;
   cout<<w<<" "<<h<<endl;
 
   pc_ = pcl::PointCloud<pcl::PointXYZ>(w,h);
   pc_cp_ = pcl::PointCloud<pcl::PointXYZ>::ConstPtr(&pc_);
   Map<MatrixXf, Aligned, OuterStride<> > pcMat = 
-    pc_.getMatrixXfMap(X_STEP,X_STEP,0);
+    pc_.getMatrixXfMap(4,4,0);
   h_xyz = pcMat.data();//(T *)malloc(w *h *3* sizeof(T));
 
   h_dbg = (T *)malloc(w *h * sizeof(T));
@@ -412,7 +420,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc
       pcComputed_ = true;
     }
 //    cout<<"w="<<w_<<" h="<<h_<<" "<<X_STEP<<" "<<sizeof(T)<<endl;
-    checkCudaErrors(cudaMemcpy(h_nPcl, d_nPcl, w_*h_ *sizeof(float)* X_STEP, 
+    checkCudaErrors(cudaMemcpy(h_nPcl, d_nPcl, w_*h_ *sizeof(float)* 8, 
           cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
     nCachedPc_ = true;
