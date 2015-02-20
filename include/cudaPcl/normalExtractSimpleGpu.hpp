@@ -227,18 +227,46 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
   assert(w_ == w); 
   assert(h_ == h);
 
-  // convert depth image to xyz point cloud
-  depth2xyzFloatGPU(depth, d_x, d_y, d_z, invF_, w_, h_, NULL);
-  // obtain derivatives using sobel 
-  computeDerivatives(w_,h_);
-  // obtain the normals using mainly cross product on the derivatives
-//  derivatives2normalsGPU(
-//      d_x,d_y,d_z,
-//      d_xu,d_yu,d_zu,
-//      d_xv,d_yv,d_zv,
-//      d_nImg_.data(),d_haveData_.data(),w_,h_);
-  derivatives2normalsGPU( d_z, d_zu, d_zv,
-      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
+  if(true)
+  {
+    // convert depth image to xyz point cloud
+    depth2xyzFloatGPU(depth, d_x, d_y, d_z, invF_, w_, h_, NULL);
+    // obtain derivatives using sobel 
+    setConvolutionKernel(h_sobel_dif);
+    convolutionRowsGPU(a,d_x,w,h);
+    convolutionRowsGPU(b,d_y,w,h);
+    convolutionRowsGPU(c,d_z,w,h);
+    setConvolutionKernel(h_sobel_sum);
+    convolutionColumnsGPU(d_xu,a,w,h);
+    convolutionColumnsGPU(d_yu,b,w,h);
+    convolutionColumnsGPU(d_zu,c,w,h);
+    convolutionRowsGPU(a,d_x,w,h);
+    convolutionRowsGPU(b,d_y,w,h);
+    convolutionRowsGPU(c,d_z,w,h);
+    setConvolutionKernel(h_sobel_dif);
+    convolutionColumnsGPU(d_xv,a,w,h);
+    convolutionColumnsGPU(d_yv,b,w,h);
+    convolutionColumnsGPU(d_zv,c,w,h);
+    // obtain the normals using mainly cross product on the derivatives
+    derivatives2normalsGPU(
+        d_x,d_y,d_z,
+        d_xu,d_yu,d_zu,
+        d_xv,d_yv,d_zv,
+        d_nImg_.data(),d_haveData_.data(),w_,h_);
+  }else{ 
+    // potentially faster but sth is wrong with the derivatives2normalsGPU
+    setConvolutionKernel(h_sobel_dif);
+    convolutionRowsGPU(c,depth,w,h);
+    setConvolutionKernel(h_sobel_sum);
+    convolutionColumnsGPU(d_zu,c,w,h);
+    convolutionRowsGPU(b,depth,w,h);
+    setConvolutionKernel(h_sobel_dif);
+    convolutionColumnsGPU(d_zv,b,w,h);
+
+    derivatives2normalsGPU(depth, d_zu, d_zv,
+        d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
+  }
+
   nCachedPc_ = false;
   nCachedImg_ = false;
   pcComputed_ = false;
@@ -462,7 +490,7 @@ cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
 {
   if(!nCachedImg_)
   {
-    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
+//    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
     nImg_ = cv::Mat(h_,w_,CV_32FC3);
     checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_ *sizeof(float)*3, 
           cudaMemcpyDeviceToHost));

@@ -20,13 +20,13 @@ namespace cudaPcl {
 class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
 {
   public:
-  OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool compress=false) 
+  OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool compress=false)
     : OpenniSmoothDepthGpu(eps,B), f_d_(f_d), normalExtract(NULL)
       ,compress_(compress)
   { };
 
-  virtual ~OpenniSmoothNormalsGpu() 
-  { 
+  virtual ~OpenniSmoothNormalsGpu()
+  {
     if(normalExtract) delete normalExtract;
   };
 
@@ -46,9 +46,9 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
 //    t.toctic("normals");
     normals_cb(normalExtract->d_normalsImg(), normalExtract->d_haveData(),w,h);
 //    t.toctic("normals callback");
-  };  
+  };
 
-  /* callback with smoothed normals 
+  /* callback with smoothed normals
    *
    * Note that the pointers are to GPU memory as indicated by the "d_" prefix.
    */
@@ -60,17 +60,19 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
     boost::mutex::scoped_lock updateLock(updateModelMutex);
     if(compress_)
     {
-      int32_t nComp =0; 
-      normalsComp_ = normalExtract->normalsComp(nComp); 
+      int32_t nComp =0;
+      normalsComp_ = normalExtract->normalsComp(nComp);
     }
-    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr( 
+    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(
         new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
     normalsImg_ = normalExtract->normalsImg();
 
     if(true)
     {
       static int frameN = 0;
-      if(frameN==0) if(system("mkdir ./normals/") >0){cout<<"problem creating subfolder for results"<<endl;};
+      if(frameN==0) if(system("mkdir ./normals/") >0){
+        cout<<"problem creating subfolder for results"<<endl;
+      };
 
       char path[100];
       // Save the image data in binary format
@@ -107,22 +109,11 @@ void OpenniSmoothNormalsGpu::visualizeD()
 
 void OpenniSmoothNormalsGpu::visualizeNormals()
 {
-//  cv::Mat nI(nDisp->height,nDisp->width,CV_32FC3); 
-//  for(uint32_t i=0; i<nDisp->width; ++i)
-//    for(uint32_t j=0; j<nDisp->height; ++j)
-//    {
-//      // nI is BGR but I want R=x G=y and B=z
-//      nI.at<cv::Vec3f>(j,i)[0] = (1.0f+nDisp->points[i+j*nDisp->width].z)*0.5f; // to match pc
-//      nI.at<cv::Vec3f>(j,i)[1] = (1.0f+nDisp->points[i+j*nDisp->width].y)*0.5f; 
-//      nI.at<cv::Vec3f>(j,i)[2] = (1.0f+nDisp->points[i+j*nDisp->width].x)*0.5f; 
-//      nDisp->points[i+j*nDisp->width].rgb=0;
-//    }
   cv::Mat nI (normalsImg_.rows,normalsImg_.cols, CV_8UC3);
-  cv::Mat nIRGB(normalsImg_.rows,normalsImg_.cols,CV_8UC3);                              
+  cv::Mat nIRGB(normalsImg_.rows,normalsImg_.cols,CV_8UC3);
   normalsImg_.convertTo(nI, CV_8UC3, 127.5,127.5);
   cv::cvtColor(nI,nIRGB,CV_RGB2BGR);
-  cv::imshow("normals",nIRGB);             
-
+  cv::imshow("normals",nIRGB);
   if (compress_)  cv::imshow("dcomp",normalsComp_);
 
 #ifdef USE_PCL_VIEWER
@@ -131,7 +122,7 @@ void OpenniSmoothNormalsGpu::visualizeNormals()
       new pcl::PointCloud<pcl::PointXYZRGB>(*nDisp_));
   this->pc_ = nDisp;
 //  this->pc_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(nDisp);
-  
+
   if(!this->viewer_->updatePointCloud(pc_, "pc"))
     this->viewer_->addPointCloud(pc_, "pc");
 #endif
