@@ -485,20 +485,48 @@ __global__ void derivatives2normals(T* d_z, T* d_zu, T* d_zv, T* d_n, uint8_t*
       d_ni[1] = 0.0/0.0;
       d_ni[2] = 0.0/0.0;
     }else{
-//      T zInvF = z*invF;
-//      T nx = zu*zInvF;
-//      T ny = zv*zInvF;
-//      T nz = (du*zu+dv*zv+z)*zInvF*invF;
-//      T zInvF = z*invF;
-      T nx = -zu/invF; // zInvF is going to be taken care of by normalizer anyway
-      T ny = -zv/invF;
-      T nz = (du*zu+dv*zv+z);//*invF;
+//      // TODO I cannot find the bug - seems instable numerically somehow?
+      T xu = invF *(zu*du + z);
+      T yu = invF *(zu*dv);
+      T zu = zu;
+      T xv = invF*zv*du;
+      T yv = invF*(zv*dv + z);
+      T zv = zv;
+
+      T invLenu = 1.0f/sqrtf(xu*xu + yu*yu + zu*zu);
+      xu *= invLenu;
+      yu *= invLenu;
+      zu *= invLenu;
+      T invLenv = 1.0f/sqrtf(xv*xv + yv*yv + zv*zv);
+      xv *= invLenv;
+      yv *= invLenv;
+      zv *= invLenv;
+
+      T nx = yu*zv - yv*zu;
+      T ny = xv*zu - xu*zv;
+      T nz = xu*yv - xv*yu;
       T lenn = sqrtf(nx*nx + ny*ny + nz*nz);
-      if(idx==100 && idy==100) printf("%f %f %f |.|=%f; %f %f %f\n",
-          nx,ny,nz,lenn,du*zu,dv*zv,z);
       T sgn = 1./lenn;
 
-      if(idx==100 && idy==100) printf("%f %f %f",nx*sgn,ny*sgn,nz*sgn);
+//      T zInvF = z*invF;
+////      T nx = zu*zInvF;
+////      T ny = zv*zInvF;
+////      T nz = (du*zu+dv*zv+z)*zInvF*invF;
+////      T zInvF = z*invF;
+////      T nz = -zu/invF; // zInvF is going to be taken care of by normalizer anyway
+////      T ny = -zv/invF;
+////      T nx = -(du*zu+dv*zv+z);//*invF;
+//
+//      T nx = zu*zInvF; // zInvF is going to be taken care of by normalizer anyway
+//      T ny = zv*zInvF;
+//      T nz = -(du*zu+dv*zv+z)*zInvF*invF;
+//      T lenn = sqrtf(nx*nx + ny*ny + nz*nz);
+//      if(idx==100 && idy==100) printf("%f %f %f |.|=%f; %f %f %f %f %f %f ;%f %f %f; %f %f \n",
+//          nx,ny,nz,lenn, zu,zv,du,dv,z,invF,
+//          du*zu,dv*zv,z,zu/invF, zv/invF);
+//      T sgn = 1./lenn;
+//
+//      if(idx==100 && idy==100) printf("%f %f %f",nx*sgn,ny*sgn,nz*sgn);
 
 //      T sgn = 1.;
 //      T sgn = signf(d_x[id]*nx + d_y[id]*ny + d_z[id]*nz)/lenn;

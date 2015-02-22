@@ -255,6 +255,8 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_nImg_.data(),d_haveData_.data(),w_,h_);
   }else{ 
     // potentially faster but sth is wrong with the derivatives2normalsGPU
+    // I think this approach is numerically instable since I cannot
+    // renormalize in between
     setConvolutionKernel(h_sobel_dif);
     convolutionRowsGPU(c,depth,w,h);
     setConvolutionKernel(h_sobel_sum);
