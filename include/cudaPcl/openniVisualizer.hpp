@@ -18,7 +18,7 @@
 
 #include <cudaPcl/openniGrabber.hpp>
 
-#define USE_PCL_VIEWER
+//#define USE_PCL_VIEWER
 
 //#include <pcl/point_cloud.h>
 //#include <pcl/impl/point_types.hpp>

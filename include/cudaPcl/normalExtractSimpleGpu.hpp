@@ -135,6 +135,7 @@ protected:
     cv::Mat normalsComp_;
     cv::Mat compInd_;
     std::vector<uint32_t> indMap_; 
+    cv::Mat haveData_;
 
     T *h_nPcl;
     T *h_xyz;
@@ -231,6 +232,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
   {
     // convert depth image to xyz point cloud
     depth2xyzFloatGPU(depth, d_x, d_y, d_z, invF_, w_, h_, NULL);
+//    haveDataGpu(depth,d_haveData_.data(),w*h,1);
     // obtain derivatives using sobel 
     setConvolutionKernel(h_sobel_dif);
     convolutionRowsGPU(a,d_x,w,h);
@@ -253,6 +255,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_xu,d_yu,d_zu,
         d_xv,d_yv,d_zv,
         d_nImg_.data(),d_haveData_.data(),w_,h_);
+    
   }else{ 
     // potentially faster but sth is wrong with the derivatives2normalsGPU
     // I think this approach is numerically instable since I cannot
@@ -267,6 +270,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
 
     derivatives2normalsGPU(depth, d_zu, d_zv,
         d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
+
   }
 
   nCachedPc_ = false;
@@ -430,7 +434,7 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
 
 template<typename T>
 float* NormalExtractSimpleGpu<T>::d_normalsPcl(){
-  if(!pcComputed_)
+  if(!pcComputed_ && w_ > 0 && h_ > 0)
   {
     xyzImg2PointCloudXYZRGB(d_nImg_.data(), d_nPcl,w_,h_);
     pcComputed_ = true;
@@ -444,7 +448,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc
   //TODO bad error here
   if(!nCachedPc_)
   {
-    if(!pcComputed_)
+    if(!pcComputed_ && w_ > 0 && h_ > 0)
     {
       xyzImg2PointCloudXYZRGB(d_nImg_.data(), d_nPcl,w_,h_);
       pcComputed_ = true;
@@ -466,13 +470,13 @@ cv::Mat NormalExtractSimpleGpu<T>::haveData()
 //  {
 
 //    cv::Mat haveData = cv::Mat::ones(h_,w_,CV_8U)*2; // not necessary
-    cv::Mat haveData (h_,w_,CV_8U);
-    checkCudaErrors(cudaMemcpy(haveData.data, d_haveData_.data(), 
+    haveData_ = cv::Mat (h_,w_,CV_8U);
+    checkCudaErrors(cudaMemcpy(haveData_.data, d_haveData_.data(), 
           w_*h_ *sizeof(uint8_t), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 //    nCachedImg_ = true;
 //  }
-  return haveData;
+  return haveData_;
 };
 
 template<typename T>
@@ -492,10 +496,10 @@ cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
 {
   if(!nCachedImg_)
   {
-//    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
+    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
     nImg_ = cv::Mat(h_,w_,CV_32FC3);
-    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_ *sizeof(float)*3, 
-          cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_
+          *sizeof(float)*3, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
     nCachedImg_ = true;
   }
@@ -507,9 +511,10 @@ cv::Mat NormalExtractSimpleGpu<double>::normalsImg()
 {
   if(!nCachedImg_)
   {
+    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
     nImg_ = cv::Mat(h_,w_,CV_64FC3);
-    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_ *sizeof(double)*3, 
-          cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_
+          *sizeof(double)*3, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
     nCachedImg_ = true;
   }

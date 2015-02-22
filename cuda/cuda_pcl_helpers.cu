@@ -351,8 +351,10 @@ void xyzImg2PointCloudXYZRGB(double* d_xyzImg, float* d_pclXYZRGB, int32_t w,
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
-  xyzImg2PointCloudXYZRGB<double><<<blocks, threads>>>(d_xyzImg,d_pclXYZRGB,w,h);
-  getLastCudaError("xyzImg2PointCloudXYZRGB() execution failed\n");
+  printf("%d %d %d\n",blocks.x,blocks.y,blocks.z);
+  printf("%d %d %d\n",threads.x,threads.y,threads.z);
+//  xyzImg2PointCloudXYZRGB<double><<<blocks, threads>>>(d_xyzImg,d_pclXYZRGB,w,h);
+//  getLastCudaError("xyzImg2PointCloudXYZRGB() execution failed\n");
 }
 
 void xyzImg2PointCloudXYZRGB(float* d_xyzImg, float* d_pclXYZRGB, int32_t w,
@@ -360,8 +362,10 @@ void xyzImg2PointCloudXYZRGB(float* d_xyzImg, float* d_pclXYZRGB, int32_t w,
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
-  xyzImg2PointCloudXYZRGB<float><<<blocks, threads>>>(d_xyzImg,d_pclXYZRGB,w,h);
-  getLastCudaError("xyzImg2PointCloudXYZRGB() execution failed\n");
+  printf("%d %d %d\n",blocks.x,blocks.y,blocks.z);
+  printf("%d %d %d\n",threads.x,threads.y,threads.z);
+//  xyzImg2PointCloudXYZRGB<float><<<blocks, threads>>>(d_xyzImg,d_pclXYZRGB,w,h);
+//  getLastCudaError("xyzImg2PointCloudXYZRGB() execution failed\n");
 }
 
 
@@ -385,9 +389,11 @@ __global__ void derivatives2normals(T* d_x, T* d_y, T* d_z,
     T yv=d_yv[id];
     T zv=d_zv[id];
     T* d_ni = d_n+id*3;
-    if (d_haveData && (xu!=xu || yu!=yu || zu!=zu || xv!=xv || yv!=yv || zv!=zv))
+    if (xu!=xu || yu!=yu || zu!=zu ||
+        xv!=xv || yv!=yv || zv!=zv ||
+        d_x[id]!=d_x[id] || d_y[id]!=d_y[id] || d_z[id]!=d_z[id])
     {
-      d_haveData[id] = 0; 
+      if (d_haveData)  d_haveData[id] = 0; 
       d_ni[0] = 0.0/0.0;
       d_ni[1] = 0.0/0.0;
       d_ni[2] = 0.0/0.0;
@@ -423,10 +429,15 @@ __global__ void derivatives2normals(T* d_x, T* d_y, T* d_z,
       d_ni[0] = nx*sgn;
       d_ni[1] = ny*sgn;
       d_ni[2] = nz*sgn;
-      if(d_haveData)
+      if(d_haveData && d_haveData[id] == 1)
         d_haveData[id] = (sgn!=sgn || (nx!=nx) || (ny!=ny) || (nz!=nz))?0:1;
     // f!=f only true for nans
     }
+//    if(idy >= 450 && d_haveData[id] > 0) 
+//      printf("%d,%d: %d n= %f %f %f p= %f %f %f\n",
+//        idx,idy,d_haveData[id],
+//        d_ni[0],d_ni[1],d_ni[2],
+//        d_x[id],d_y[id],d_z[id] );
   }
 }
 
@@ -475,8 +486,8 @@ __global__ void derivatives2normals(T* d_z, T* d_zu, T* d_zv, T* d_n, uint8_t*
     const T du = (T(idx)-(w-1.)*0.5);
     const T dv = (T(idy)-(h-1.)*0.5);
     const T z  = d_z[id];
-    const T zu = d_zu[id];
-    const T zv = d_zv[id];
+    T zu = d_zu[id];
+    T zv = d_zv[id];
     T* d_ni = d_n+id*3;
     if (d_haveData && (z != z || zu!=zu || zv!=zv))
     {
@@ -488,10 +499,8 @@ __global__ void derivatives2normals(T* d_z, T* d_zu, T* d_zv, T* d_n, uint8_t*
 //      // TODO I cannot find the bug - seems instable numerically somehow?
       T xu = invF *(zu*du + z);
       T yu = invF *(zu*dv);
-      T zu = zu;
       T xv = invF*zv*du;
       T yv = invF*(zv*dv + z);
-      T zv = zv;
 
       T invLenu = 1.0f/sqrtf(xu*xu + yu*yu + zu*zu);
       xu *= invLenu;
@@ -568,6 +577,8 @@ void derivatives2normalsGPU(double* d_z, double* d_zu, double* d_zv, double*
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
+  printf("%d %d %d\n",blocks.x,blocks.y,blocks.z);
+  printf("%d %d %d\n",threads.x,threads.y,threads.z);
   derivatives2normals<<<blocks, threads>>>(d_z, d_zu, d_zv,
       d_n,d_haveData,invF,w,h);
   getLastCudaError("derivatives2normalsGPU() execution failed\n");
