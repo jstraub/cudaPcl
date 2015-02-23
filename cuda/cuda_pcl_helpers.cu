@@ -424,12 +424,18 @@ __global__ void derivatives2normals(T* d_x, T* d_y, T* d_z,
 //  ny=0.0f/0.0f;
 //  nz=0.0f/0.0f;
 //} 
+      if(idy > 440)
+      { // stupid fix for weird artifact
+        nx = 0./0.;
+        ny = 0./0.;
+        nz = 0./0.;
+      }
 
     // the 4th component is always 1.0f - due to PCL conventions!
       d_ni[0] = nx*sgn;
       d_ni[1] = ny*sgn;
       d_ni[2] = nz*sgn;
-      if(d_haveData && d_haveData[id] == 1)
+      if(d_haveData)
         d_haveData[id] = (sgn!=sgn || (nx!=nx) || (ny!=ny) || (nz!=nz))?0:1;
     // f!=f only true for nans
     }

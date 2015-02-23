@@ -107,6 +107,9 @@ void OpenniSmoothNormalsGpu::visualizeD()
     cv::Mat dSmooth = this->depthFilter->getOutput();
     this->dColor_ = colorizeDepth(dSmooth,0.3,4.0);
     cv::imshow("d",dColor_);
+    cv::Mat dNans = dSmooth.clone();
+    showNans(dNans);
+    cv::imshow("depth Nans",dNans);
   }
 };
 
@@ -120,6 +123,12 @@ void OpenniSmoothNormalsGpu::visualizeNormals()
   cv::cvtColor(nI,nIRGB_,CV_RGB2BGR);
   cv::imshow("normals",nIRGB_);
   if (compress_)  cv::imshow("dcomp",normalsComp_);
+
+  std::vector<cv::Mat> nChans(3);
+  cv::split(normalsImg_,nChans);
+  cv::Mat nNans = nChans[0].clone();
+  showNans(nNans);
+  cv::imshow("normal Nans",nNans);
 
   cv::Mat haveData = normalExtract->haveData();
   cv::imshow("haveData",haveData*200);

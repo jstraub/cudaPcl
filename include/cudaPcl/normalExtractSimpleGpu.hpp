@@ -204,22 +204,23 @@ void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32
   checkCudaErrors(cudaMemcpy(d_depth, data, w_ * h_ * sizeof(uint16_t),
         cudaMemcpyHostToDevice));
   checkCudaErrors(cudaDeviceSynchronize());
+  computeGpu(d_depth,w,h);
 
-  depth2xyzGPU(d_depth, d_x, d_y, d_z,invF_, w_, h_, NULL);
-  // obtain derivatives using sobel 
-  computeDerivatives(w_,h_);
-  // obtain the normals using mainly cross product on the derivatives
-//  derivatives2normalsGPU(
-//      d_x,d_y,d_z,
-//      d_xu,d_yu,d_zu,
-//      d_xv,d_yv,d_zv,
-//      d_nImg_.data(),d_haveData_.data(),w_,h_);
-  derivatives2normalsGPU( d_z, d_zu, d_zv,
-      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
-  nCachedPc_ = false;
-  nCachedImg_ = false;
-  pcComputed_ = false;
-  nCachedComp_ = false;
+//  depth2xyzGPU(d_depth, d_x, d_y, d_z,invF_, w_, h_, NULL);
+//  // obtain derivatives using sobel 
+//  computeDerivatives(w_,h_);
+//  // obtain the normals using mainly cross product on the derivatives
+////  derivatives2normalsGPU(
+////      d_x,d_y,d_z,
+////      d_xu,d_yu,d_zu,
+////      d_xv,d_yv,d_zv,
+////      d_nImg_.data(),d_haveData_.data(),w_,h_);
+//  derivatives2normalsGPU( d_z, d_zu, d_zv,
+//      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
+//  nCachedPc_ = false;
+//  nCachedImg_ = false;
+//  pcComputed_ = false;
+//  nCachedComp_ = false;
 };
 
 template<typename T>
@@ -234,21 +235,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
     depth2xyzFloatGPU(depth, d_x, d_y, d_z, invF_, w_, h_, NULL);
 //    haveDataGpu(depth,d_haveData_.data(),w*h,1);
     // obtain derivatives using sobel 
-    setConvolutionKernel(h_sobel_dif);
-    convolutionRowsGPU(a,d_x,w,h);
-    convolutionRowsGPU(b,d_y,w,h);
-    convolutionRowsGPU(c,d_z,w,h);
-    setConvolutionKernel(h_sobel_sum);
-    convolutionColumnsGPU(d_xu,a,w,h);
-    convolutionColumnsGPU(d_yu,b,w,h);
-    convolutionColumnsGPU(d_zu,c,w,h);
-    convolutionRowsGPU(a,d_x,w,h);
-    convolutionRowsGPU(b,d_y,w,h);
-    convolutionRowsGPU(c,d_z,w,h);
-    setConvolutionKernel(h_sobel_dif);
-    convolutionColumnsGPU(d_xv,a,w,h);
-    convolutionColumnsGPU(d_yv,b,w,h);
-    convolutionColumnsGPU(d_zv,c,w,h);
+    computeDerivatives(w_,h_);
     // obtain the normals using mainly cross product on the derivatives
     derivatives2normalsGPU(
         d_x,d_y,d_z,
@@ -272,6 +259,8 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
 
   }
+  cout<<"compute haveData"<<endl;
+  haveDataGpu(d_nImg_.data(),d_haveData_.data(),w*h,3);
 
   nCachedPc_ = false;
   nCachedImg_ = false;
@@ -337,28 +326,21 @@ template<typename T>
 void NormalExtractSimpleGpu<T>::computeDerivatives(uint32_t w,uint32_t h)
 {
 //  // TODO could reorder stuff here
-//  setConvolutionKernel(h_sobel_dif);
-////  convolutionRowsGPU(a,d_x,w,h);
-////  convolutionRowsGPU(b,d_y,w,h);
-//  convolutionRowsGPU(c,d_z,w,h);
-//  setConvolutionKernel(h_sobel_sum);
-////  convolutionColumnsGPU(d_xu,a,w,h);
-////  convolutionColumnsGPU(d_yu,b,w,h);
-//  convolutionColumnsGPU(d_zu,c,w,h);
-////  convolutionRowsGPU(a,d_x,w,h);
-////  convolutionRowsGPU(b,d_y,w,h);
-//  convolutionRowsGPU(c,d_z,w,h);
-//  setConvolutionKernel(h_sobel_dif);
-////  convolutionColumnsGPU(d_xv,a,w,h);
-////  convolutionColumnsGPU(d_yv,b,w,h);
-//  convolutionColumnsGPU(d_zv,c,w,h);
-
   setConvolutionKernel(h_sobel_dif);
-  convolutionColumnsGPU(b,d_z,w,h);
+  convolutionRowsGPU(a,d_x,w,h);
+  convolutionRowsGPU(b,d_y,w,h);
   convolutionRowsGPU(c,d_z,w,h);
   setConvolutionKernel(h_sobel_sum);
-  convolutionRowsGPU(d_zv,b,w,h);
+  convolutionColumnsGPU(d_xu,a,w,h);
+  convolutionColumnsGPU(d_yu,b,w,h);
   convolutionColumnsGPU(d_zu,c,w,h);
+  convolutionRowsGPU(a,d_x,w,h);
+  convolutionRowsGPU(b,d_y,w,h);
+  convolutionRowsGPU(c,d_z,w,h);
+  setConvolutionKernel(h_sobel_dif);
+  convolutionColumnsGPU(d_xv,a,w,h);
+  convolutionColumnsGPU(d_yv,b,w,h);
+  convolutionColumnsGPU(d_zv,c,w,h);
 }
 
 
