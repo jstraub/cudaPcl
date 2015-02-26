@@ -135,7 +135,8 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   tLog.tic(0);
   // convert uint16_t to float and find locations with data 
   d_depthU16.set((uint16_t*)depth.data,h_,w_);
-  depth2floatGPU(d_depthU16.data(),d_depth.data(), d_haveData_.data(),w_,h_,-1);
+  depth2floatGPU(d_depthU16.data(),d_depth.data(),
+      d_haveData_.data(),w_,h_,-1);
   d_haveData_.get((uint8_t*)haveData.data,h_,w_);   
   d_depth.getAsync((double*)dFlt.data,h_,w_,stream1); // copy the double image async sinze it takes longer
 

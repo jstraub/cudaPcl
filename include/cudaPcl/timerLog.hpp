@@ -30,6 +30,7 @@ public:
 
   virtual void tic(int32_t id=-1);
   virtual float toc(int32_t id=-1);
+  virtual void setDt(int32_t id, float dt);
 
   virtual void toctic(int32_t id0, int32_t id1){ toc(id0);tic(id1); };
 
@@ -86,11 +87,29 @@ void TimerLog::logCycle()
   fout_.flush();
 };
 
+void TimerLog::setDt(int32_t id, float dt)
+{
+  if( 0<= id && id < static_cast<int32_t>(t0s_.size()))
+  {
+    Ns_[id] ++;
+    dts_[id] = dt;
+    if(Ns_[id] == it0_)
+    { // reset sums
+      tSums_[id] = 0.;
+      tSquareSums_[id] = 0.;
+    }else{
+      tSums_[id] += dts_[id];
+      tSquareSums_[id] += dts_[id]*dts_[id];
+    }
+  }
+};
+
 void TimerLog::tic(int32_t id)
 {
   timeval t0 = this->getTimeOfDay();
   if(id < 0){
-    for(int32_t i=0; i<static_cast<int32_t>(t0s_.size()); ++i) t0s_[i] = t0;
+    for(int32_t i=0; i<static_cast<int32_t>(t0s_.size()); ++i) 
+      t0s_[i] = t0;
   } else if( 0<= id && id < static_cast<int32_t>(t0s_.size()))
     t0s_[id] = t0;
   else{  // add a new timer

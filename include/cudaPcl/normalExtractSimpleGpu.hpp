@@ -314,11 +314,12 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
 
 
 template<typename T>
-void NormalExtractSimpleGpu<T>::uncompressCpu(const uint32_t* in, uint32_t Nin,
-    uint32_t* out, uint32_t Nout)
+void NormalExtractSimpleGpu<T>::uncompressCpu(const uint32_t* in,
+    uint32_t Nin, uint32_t* out, uint32_t Nout)
 {
   if(indMap_.size() > 0)
   {
+    for(uint32_t i=0; i<Nout; ++i) out[i] = INT_MAX;
     for(uint32_t i=0; i<Nin; ++i) out[indMap_[i]] = in[i];
   }
 };

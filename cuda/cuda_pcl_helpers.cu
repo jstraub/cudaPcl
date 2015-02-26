@@ -49,6 +49,7 @@ void depth2xyzGPU(uint16_t* d, float* x, float* y, float* z,
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
+  printf("depth2xyzGPU %d x %d",w,h);
   depth2xyz<float><<<blocks, threads>>>(d,x,y,z,invF,w,h,xyz);
   getLastCudaError("depth2xyzGPU() execution failed\n");
 }
@@ -57,6 +58,7 @@ void depth2xyzGPU(uint16_t* d, double* x, double* y, double* z,
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
+  printf("depth2xyzGPU %d x %d",w,h);
   depth2xyz<double><<<blocks, threads>>>(d,x,y,z,invF,w,h,xyz);
   getLastCudaError("depth2xyzGPU() execution failed\n");
 }
@@ -87,18 +89,18 @@ void depth2floatGPU(uint16_t* d, double* d_float, uint8_t* haveData,int w, int h
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
-
-  if (outStep <0 ) outStep = w;
+//  printf("depth2floatGPU (double) %d x %d",w,h);
+  if (outStep < 0 ) outStep = w;
   depth2float<double><<<blocks, threads>>>(d,d_float,haveData,w,h,outStep);
   getLastCudaError("depth2floatGPU() execution failed\n");
 }
 
-void depth2floatGPU(unsigned short* d, float* d_float,uint8_t* haveData, int w, int h, int outStep)
+void depth2floatGPU(uint16_t* d, float* d_float,uint8_t* haveData, int w, int h, int outStep)
 {
   dim3 threads(16,16,1);
   dim3 blocks(w/16 + (w%16>0?1:0),h/16 + (h%16>0?1:0),1);
-
-  if (outStep <0 ) outStep = w;
+//  printf("depth2floatGPU (float) %d x %d",w,h);
+  if (outStep < 0 ) outStep = w;
   depth2float<float><<<blocks, threads>>>(d,d_float,haveData,w,h,outStep);
   getLastCudaError("depth2floatGPU() execution failed\n");
 }
