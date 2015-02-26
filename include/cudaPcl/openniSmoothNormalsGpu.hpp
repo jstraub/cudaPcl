@@ -20,7 +20,8 @@ namespace cudaPcl {
 class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
 {
   public:
-  OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool compress=false)
+  OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool
+      compress=false)
     : OpenniSmoothDepthGpu(eps,B), f_d_(f_d), normalExtract(NULL)
       ,compress_(compress)
   { };

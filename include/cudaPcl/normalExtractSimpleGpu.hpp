@@ -259,7 +259,6 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
 
   }
-  cout<<"compute haveData"<<endl;
   haveDataGpu(d_nImg_.data(),d_haveData_.data(),w*h,3);
 
   nCachedPc_ = false;
@@ -306,8 +305,10 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
       GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
       copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3); 
     }
+#ifndef NDEBUG
     cout<<"compression of "<<T(w*h-nComp_)/T(w*h)<<"% to "
       <<nComp_<<" datapoints"<<endl;
+#endif
 };
 
 
@@ -478,7 +479,7 @@ cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
 {
   if(!nCachedImg_)
   {
-    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
+//    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
     nImg_ = cv::Mat(h_,w_,CV_32FC3);
     checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_
           *sizeof(float)*3, cudaMemcpyDeviceToHost));
