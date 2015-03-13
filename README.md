@@ -21,7 +21,7 @@ This code depends on the following other libraries and was tested under Ubuntu
 - pcl 1.7 (and vtk 5.8)
 - Opencv 2 (2.3.1)
 - Eigen3 (3.0.5) 
-- cuda 5.5 (the samples need to be installed as well since the separable convolution kernel is used)
+- cuda 5.5 or 6.5 
 - Boost (1.52)
 
 The GPU kernels were tested on a Nvidia Quadro K2000M with compute
