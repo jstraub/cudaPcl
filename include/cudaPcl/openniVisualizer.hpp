@@ -52,9 +52,11 @@ public:
   virtual void depth_cb(const uint16_t * depth, uint32_t w, uint32_t h)
   {
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
-    boost::mutex::scoped_lock updateLock(updateModelMutex);
-    dColor_ = colorizeDepth(dMap,30.,4000.);
-    update_=true;
+    {
+      boost::mutex::scoped_lock updateLock(updateModelMutex);
+      dColor_ = colorizeDepth(dMap,30.,4000.);
+    }
+    this->update();
   };  
 
   static cv::Mat colorizeDepth(const cv::Mat& dMap, float min, float max);
@@ -66,6 +68,11 @@ protected:
   boost::mutex updateModelMutex;
   cv::Mat dColor_;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_;
+
+  void update(){
+    boost::mutex::scoped_lock updateLock(updateModelMutex);
+    update_=true;
+  };
 
   virtual void visualize_();
   virtual void visualizeRGB();

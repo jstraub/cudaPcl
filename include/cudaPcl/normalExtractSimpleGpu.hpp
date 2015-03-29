@@ -37,14 +37,14 @@ void copyShuffleGPU(float* in, float* out, uint32_t* ind, int32_t N, int32_t ste
 void haveDataGpu(float* d_x, uint8_t* d_haveData, int32_t N, uint32_t step);
 void haveDataGpu(double* d_x, uint8_t* d_haveData, int32_t N, uint32_t step);
 
-void derivatives2normalsGPU(float* d_x, float* d_y, float* d_z, 
-    float* d_xu, float* d_yu, float* d_zu, 
-    float* d_xv, float* d_yv, float* d_zv, 
+void derivatives2normalsGPU(float* d_x, float* d_y, float* d_z,
+    float* d_xu, float* d_yu, float* d_zu,
+    float* d_xv, float* d_yv, float* d_zv,
     float* d_n, uint8_t* d_haveData, int w, int h);
 
-void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z, 
-    double* d_xu, double* d_yu, double* d_zu, 
-    double* d_xv, double* d_yv, double* d_zv, 
+void derivatives2normalsGPU(double* d_x, double* d_y, double* d_z,
+    double* d_xu, double* d_yu, double* d_zu,
+    double* d_xv, double* d_yv, double* d_zv,
     double* d_n, uint8_t* d_haveData, int w, int h);
 
 void derivatives2normalsGPU(float* d_z, float* d_zu, float* d_zv, float* d_n,
@@ -60,10 +60,19 @@ void xyzImg2PointCloudXYZRGB(float* d_xyzImg, float* d_pclXYZRGB, int32_t w,
 
 namespace cudaPcl {
 
+struct CfgSmoothNormals
+{
+  CfgSmoothNormals() : f_d(540.f), eps(0.2f*0.2f), B(9), compress(true){};
+  float f_d;
+  float eps;
+  uint32_t B;
+  bool compress;
+};
+
 template<typename T>
 class NormalExtractSimpleGpu
 {
-public: 
+public:
   NormalExtractSimpleGpu(T f_depth, uint32_t w, uint32_t h, bool compress = false);
   ~NormalExtractSimpleGpu();
 
@@ -88,7 +97,7 @@ public:
   cv::Mat normalsImg();
   T* d_normalsImg(){return d_nImg_.data();}; // get pointer to memory with normal image
 
-  // uint8_t where we have data 
+  // uint8_t where we have data
   cv::Mat haveData();
   uint8_t* d_haveData(){return d_haveData_.data();}; // get pointer to memory with normal image
 
@@ -111,7 +120,7 @@ protected:
     void computeDerivatives(uint32_t w,uint32_t h);
     // smoothes the derivatives (iterations) times
     void smoothDerivatives(uint32_t iterations, uint32_t w,uint32_t h);
-    // convert the d_depth into smoothed xyz 
+    // convert the d_depth into smoothed xyz
     void depth2smoothXYZ(T invF, uint32_t w,uint32_t h);
 
     T invF_;
@@ -134,7 +143,7 @@ protected:
     GpuMatrix<uint32_t> d_compInd_;
     cv::Mat normalsComp_;
     cv::Mat compInd_;
-    std::vector<uint32_t> indMap_; 
+    std::vector<uint32_t> indMap_;
     cv::Mat haveData_;
 
     T *h_nPcl;
@@ -198,7 +207,7 @@ NormalExtractSimpleGpu<T>::~NormalExtractSimpleGpu()
 template<typename T>
 void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32_t h)
 {
-  assert(w_ == w); 
+  assert(w_ == w);
   assert(h_ == h);
 
   checkCudaErrors(cudaMemcpy(d_depth, data, w_ * h_ * sizeof(uint16_t),
@@ -207,7 +216,7 @@ void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32
   computeGpu(d_depth,w,h);
 
 //  depth2xyzGPU(d_depth, d_x, d_y, d_z,invF_, w_, h_, NULL);
-//  // obtain derivatives using sobel 
+//  // obtain derivatives using sobel
 //  computeDerivatives(w_,h_);
 //  // obtain the normals using mainly cross product on the derivatives
 ////  derivatives2normalsGPU(
@@ -226,7 +235,7 @@ void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32
 template<typename T>
 void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
 {
-  assert(w_ == w); 
+  assert(w_ == w);
   assert(h_ == h);
 
   if(true)
@@ -234,7 +243,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
     // convert depth image to xyz point cloud
     depth2xyzFloatGPU(depth, d_x, d_y, d_z, invF_, w_, h_, NULL);
 //    haveDataGpu(depth,d_haveData_.data(),w*h,1);
-    // obtain derivatives using sobel 
+    // obtain derivatives using sobel
     computeDerivatives(w_,h_);
     // obtain the normals using mainly cross product on the derivatives
     derivatives2normalsGPU(
@@ -242,8 +251,8 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_xu,d_yu,d_zu,
         d_xv,d_yv,d_zv,
         d_nImg_.data(),d_haveData_.data(),w_,h_);
-    
-  }else{ 
+
+  }else{
     // potentially faster but sth is wrong with the derivatives2normalsGPU
     // I think this approach is numerically instable since I cannot
     // renormalize in between
@@ -301,9 +310,9 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
     {
       d_normalsComp_.resize(nComp_,3);
       // just shuffle the first 640 entries -> definitely sufficient to ge random init for the algfoerithms
-      std::random_shuffle(indMap_.begin(), indMap_.begin() + std::min(640,nComp_)); 
+      std::random_shuffle(indMap_.begin(), indMap_.begin() + std::min(640,nComp_));
       GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
-      copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3); 
+      copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3);
     }
 #ifndef NDEBUG
     cout<<"compression of "<<T(w*h-nComp_)/T(w*h)<<"% to "
@@ -349,9 +358,9 @@ void NormalExtractSimpleGpu<T>::computeDerivatives(uint32_t w,uint32_t h)
 template<typename T>
 void NormalExtractSimpleGpu<T>::computeAreaWeights()
 {
-  if(d_w == NULL) 
+  if(d_w == NULL)
     checkCudaErrors(cudaMalloc((void **)&d_w, w_ * h_ * sizeof(T)));
-//#ifdef WEIGHTED    
+//#ifdef WEIGHTED
 //  weightsFromCovGPU(d_z, d_w, 30.0f, invF_, w_,h_);
   weightsFromAreaGPU(d_z, d_w, w_,h_);
 //#endif
@@ -397,7 +406,7 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
 
   n_ = pcl::PointCloud<pcl::PointXYZRGB>(w,h);
   n_cp_ = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(&n_);
-  Map<MatrixXf, Aligned, OuterStride<> > nMat = 
+  Map<MatrixXf, Aligned, OuterStride<> > nMat =
     n_.getMatrixXfMap(8,8,0);
   h_nPcl = nMat.data();//(T *)malloc(w *h *3* sizeof(T));
 
@@ -406,7 +415,7 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
 
   pc_ = pcl::PointCloud<pcl::PointXYZ>(w,h);
   pc_cp_ = pcl::PointCloud<pcl::PointXYZ>::ConstPtr(&pc_);
-  Map<MatrixXf, Aligned, OuterStride<> > pcMat = 
+  Map<MatrixXf, Aligned, OuterStride<> > pcMat =
     pc_.getMatrixXfMap(4,4,0);
   h_xyz = pcMat.data();//(T *)malloc(w *h *3* sizeof(T));
 
@@ -438,7 +447,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc
       pcComputed_ = true;
     }
 //    cout<<"w="<<w_<<" h="<<h_<<" "<<X_STEP<<" "<<sizeof(T)<<endl;
-    checkCudaErrors(cudaMemcpy(h_nPcl, d_nPcl, w_*h_ *sizeof(float)* 8, 
+    checkCudaErrors(cudaMemcpy(h_nPcl, d_nPcl, w_*h_ *sizeof(float)* 8,
           cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
     nCachedPc_ = true;
@@ -455,7 +464,7 @@ cv::Mat NormalExtractSimpleGpu<T>::haveData()
 
 //    cv::Mat haveData = cv::Mat::ones(h_,w_,CV_8U)*2; // not necessary
     haveData_ = cv::Mat (h_,w_,CV_8U);
-    checkCudaErrors(cudaMemcpy(haveData_.data, d_haveData_.data(), 
+    checkCudaErrors(cudaMemcpy(haveData_.data, d_haveData_.data(),
           w_*h_ *sizeof(uint8_t), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 //    nCachedImg_ = true;
@@ -541,7 +550,7 @@ cv::Mat NormalExtractSimpleGpu<double>::normalsComp(int32_t& nComp)
 //{
 //  if(!nCachedPc_)
 //  {
-//    checkCudaErrors(cudaMemcpy(h_nPcl, d_nImg_, w_*h_* X_STEP *sizeof(T), 
+//    checkCudaErrors(cudaMemcpy(h_nPcl, d_nImg_, w_*h_* X_STEP *sizeof(T),
 //          cudaMemcpyDeviceToHost));
 //    checkCudaErrors(cudaDeviceSynchronize());
 //    nCachedPc_ = true;
@@ -553,7 +562,7 @@ cv::Mat NormalExtractSimpleGpu<double>::normalsComp(int32_t& nComp)
 //{
 ////  if(!pcCached_)
 ////  {
-////    checkCudaErrors(cudaMemcpy(h_xyz, d_xyz, w_*h_*4 *sizeof(T), 
+////    checkCudaErrors(cudaMemcpy(h_xyz, d_xyz, w_*h_*4 *sizeof(T),
 ////          cudaMemcpyDeviceToHost));
 ////    checkCudaErrors(cudaDeviceSynchronize());
 ////    pcCached_ = true;

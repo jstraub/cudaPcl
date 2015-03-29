@@ -91,7 +91,7 @@ class DepthGuidedFilterGpu
   protected:
   uint32_t w_,h_;
   double eps_;
-    uint32_t B_;
+  uint32_t B_;
 
   GpuMatrix<uint16_t> d_depthU16;
   GpuMatrix<double> d_depth;
@@ -177,8 +177,10 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   //    d_depthSmooth.get((T*)dSmooth.data,h_,w_);
 
   tLog.toc(4);
+#ifndef NDEBUG
   tLog.logCycle();
   tLog.printStats();
+#endif
 
   //    return dSmooth;
 }
