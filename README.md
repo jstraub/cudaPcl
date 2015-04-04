@@ -17,7 +17,7 @@ cross-product operation yields smoothed surface normals.
 ### Dependencies
 
 This code depends on the following other libraries and was tested under Ubuntu
-12.04. 
+14.04. 
 - pcl 1.7 (and vtk 5.8)
 - Opencv 2 (2.3.1)
 - Eigen3 (3.0.5) 

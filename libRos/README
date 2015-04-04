@@ -1,2 +1,0 @@
-need this extra cmake file since the include directiroes are different for the
-library since it is intended for use with ROS
