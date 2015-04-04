@@ -26,8 +26,8 @@ ifeq "$(BUILD_TYPE)" ""
 BUILD_TYPE="Release"
 endif
 
-me:
-	@$(MAKE) -C pod-build all install
+me: pod-build/Makefile
+	$(MAKE) -C pod-build all install
 
 all:
 	@[ -d $(BUILD_PREFIX) ] || mkdir -p $(BUILD_PREFIX) || exit 1
