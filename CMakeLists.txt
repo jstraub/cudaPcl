@@ -134,6 +134,10 @@ INSTALL(TARGETS cudaPcl
   ARCHIVE DESTINATION lib
   )
 
+pods_install_libraries(cudaPcl)
+pods_install_executables(pclGrabber pclBenchmark pclNormals
+  openniSmoothNormals openniSmoothDepth)
+
 install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
           FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
