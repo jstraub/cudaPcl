@@ -40,6 +40,8 @@ struct GpuMatrix
   ~GpuMatrix();
 
   void set(T A);
+  void set(const T* A, uint32_t rows, uint32_t cols, 
+    uint32_t aPitch, uint32_t gpuPitch);
   void set(const T* A, uint32_t rows, uint32_t cols);
   void set(const std::vector<T>& A);
   void set(const Matrix<T,Dynamic,Dynamic>& A);
@@ -176,6 +178,19 @@ template <class T>
         cudaMemcpyHostToDevice));
   initialized_ = true;
 };
+
+template <class T>
+void GpuMatrix<T>::set(const T* A, uint32_t rows, uint32_t cols,
+    uint32_t aPitch, uint32_t gpuPitch)
+{
+  resize(rows,cols);
+  assert(rows == rows_);
+  assert(cols == cols_);
+  checkCudaErrors(cudaMemcpy2D(data_, gpuPitch*sizeof(T), A,
+        aPitch*sizeof(T), cols_* sizeof(T), rows_,
+        cudaMemcpyHostToDevice));
+  initialized_ = true;
+}
 
 template <class T>
   void GpuMatrix<T>::set(const T* A, uint32_t rows, uint32_t cols)

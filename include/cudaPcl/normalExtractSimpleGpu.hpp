@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <Eigen/Dense>
 
+#include <pcl/point_types.h>
+#include <pcl/features/normal_3d.h>
+
 // CUDA runtime
 #include <cuda_runtime.h>
 
@@ -77,12 +80,15 @@ public:
   ~NormalExtractSimpleGpu();
 
   void compute(const uint16_t* data, uint32_t w, uint32_t h);
+  void compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc, T radius=0.03);
+
   void computeGpu(T* d_depth, uint32_t w, uint32_t h);
   void computeAreaWeights();
   void compressNormals( uint32_t w, uint32_t h);
 //  void compressNormalsCpu(float* n, uint32_t w, uint32_t h);
 
   void setNormalsCpu(T* n, uint32_t w, uint32_t h);
+  void setNormalsCpu(const pcl::PointCloud<pcl::Normal>& normals);
 
   // compressed normals
   cv::Mat normalsComp(int32_t& nComp);
@@ -277,6 +283,40 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
   if(compress_)
   {
     compressNormals(w,h);
+  }
+};
+
+template<typename T>
+void NormalExtractSimpleGpu<T>::compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pc, T radius)
+{
+  // extract surface normals
+  pcl::PointCloud<pcl::Normal> normals;
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  ne.setInputCloud(pc);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+  ne.setSearchMethod (tree);
+  ne.setRadiusSearch (radius);
+  ne.compute (normals);
+  setNormalsCpu(normals);
+};
+
+template<typename T>
+void NormalExtractSimpleGpu<T>::setNormalsCpu(const pcl::PointCloud<pcl::Normal>& normals)
+{
+  assert(normals.width==w_);
+  assert(normals.height==h_);
+  // use pitchs to copy correctly: pcl:Normals is float[4] where the
+  // first 3 are normals and the 4th is the curvature
+  d_nImg_.set(normals.getMatrixXfMap().data(),normals.height,normals.width,3,4);
+  haveDataGpu(d_nImg_.data(),d_haveData_.data(),normals.height*normals.width ,3);
+
+  nCachedPc_ = false;
+  nCachedImg_ = false;
+  pcComputed_ = false;
+  nCachedComp_ = false;
+  if(compress_)
+  {
+    compressNormals(normals.width,normals.height);
   }
 };
 
