@@ -12,7 +12,7 @@
 
 
 #include <assert.h>
-#include <cudaPcl/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 #include <cudaPcl/convolutionSeparable_common.h>
 
 

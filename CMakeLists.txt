@@ -1,6 +1,9 @@
 project(cudaPcl)
 cmake_minimum_required(VERSION 2.4.6)
 
+set(POD_NAME cudaPcl)
+include(cmake/pods.cmake)
+
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -43,22 +46,22 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   ${CUDA_TOOLKIT_INCLUDE}
-  include/nvidia/
+#  include/nvidia/
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
 #  /usr/include
 #  $ENV{WORKSPACE_HOME}/3rdparty/include/pcl-1.7/
-  /usr/include/ni
-  /usr/include/vtk-5.8/
+#  /usr/include/ni
+#  /usr/include/vtk-5.8/
   ${Boost_INCLUDE_DIRS}
-  $ENV{WORKSPACE_HOME}/3rdparty/include/
-  $ENV{WORKSPACE_HOME}/3rdparty/include/libfreenect2/tinythread/
+#  $ENV{WORKSPACE_HOME}/3rdparty/include/
+#  $ENV{WORKSPACE_HOME}/3rdparty/include/libfreenect2/tinythread/
 )
 
 link_directories(
   ${PCL_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIRS}
-  $ENV{WORKSPACE_HOME}/3rdparty/lib
+#  $ENV{WORKSPACE_HOME}/3rdparty/lib
 )
 
 add_executable(pclNormals ./src/pclNormals.cpp)

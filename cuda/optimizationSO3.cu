@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <cudaPcl/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 
 #define PI  3.141592653589793f
 #define BLOCK_SIZE 256

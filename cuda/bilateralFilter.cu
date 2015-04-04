@@ -3,7 +3,7 @@
  */
 
 #include <stdint.h>
-#include <cudaPcl/helper_cuda.h> 
+#include <nvidia/helper_cuda.h> 
 
 template<typename T>
 inline __device__

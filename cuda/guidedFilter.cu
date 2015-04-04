@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <cudaPcl/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 //#define BLK_SIZE 128
 
 template<typename T, int32_t B>

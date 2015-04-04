@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <cudaPcl/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 #include <cudaPcl/cudaSphereHelpers.h>
 
 #define BLOCK_WIDTH 16

@@ -366,5 +366,4 @@ void GpuMatrix<T>::getAsync(T* A, uint32_t rows, uint32_t cols, cudaStream_t& st
                 cudaMemcpyDeviceToHost,stream));
 };
 
-
 }

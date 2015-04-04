@@ -2,6 +2,9 @@
 
 default_target: all
 
+# get a list of subdirs to build by reading tobuild.txt
+SUBDIRS:=$(shell grep -v "^\#" tobuild.txt)
+
 # Default to a less-verbose build.  If you want all the gory compiler output,
 # run "make VERBOSE=1"
 $(VERBOSE).SILENT:
@@ -23,8 +26,24 @@ ifeq "$(BUILD_TYPE)" ""
 BUILD_TYPE="Release"
 endif
 
-all: pod-build/Makefile
-	$(MAKE) -C pod-build all install
+all:
+	@[ -d $(BUILD_PREFIX) ] || mkdir -p $(BUILD_PREFIX) || exit 1
+	@for subdir in $(SUBDIRS); do \
+    echo "\n-------------------------------------------"; \
+    echo "-- $$subdir"; \
+    echo "-------------------------------------------"; \
+    $(MAKE) -C $$subdir all || exit 2; \
+  done
+	@# Place additional commands here if you have any
+
+clean:
+	@for subdir in $(SUBDIRS); do \
+    echo "\n-------------------------------------------"; \
+    echo "-- $$subdir"; \
+    echo "-------------------------------------------"; \
+    $(MAKE) -C $$subdir clean; \
+  done
+	@# Place additional commands here if you have any
 
 pod-build/Makefile:
 	$(MAKE) configure
@@ -40,10 +59,13 @@ configure:
 	@cd pod-build && cmake -DCMAKE_INSTALL_PREFIX=$(BUILD_PREFIX) \
 		   -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) ..
 
-clean:
-	-if [ -e pod-build/install_manifest.txt ]; then rm -f `cat pod-build/install_manifest.txt`; fi
-	-if [ -d pod-build ]; then $(MAKE) -C pod-build clean; rm -rf pod-build; fi
 
-# other (custom) targets are passed through to the cmake-generated Makefile 
+checkout:
+	git clone /data/vision/fisher/code/jstraub/gitrep/research/jsCore.git/
+
+update:
+	cd jsCore; git pull; cd -
+
+# other (custom) targets are passed through to the cmake-generated Makefile
 %::
 	$(MAKE) -C pod-build $@

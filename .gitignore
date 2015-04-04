@@ -1,5 +1,6 @@
 build
 pod-build
+jsCore
 *~
 *.pyc
 *.csv
