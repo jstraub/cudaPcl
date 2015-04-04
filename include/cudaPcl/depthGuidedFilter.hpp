@@ -7,9 +7,9 @@
 #include <stdint.h>
 #include <math.h>
 
+#include <jsCore/gpuMatrix.hpp>
 #include <cudaPcl/timer.hpp>
 #include <cudaPcl/timerLog.hpp>
-#include <cudaPcl/gpuMatrix.hpp>
 
 using std::cout;
 using std::endl;
@@ -56,8 +56,8 @@ class DepthGuidedFilterGpu
       d_aInt(h_+1,w_+1), d_bInt(h_+1,w_+1) 
   {
     cout<<"creating depth filter"<<endl;
-    stream1 = GpuMatrix<double>::createStream();
-    stream2 = GpuMatrix<double>::createStream();
+    stream1 = jsc::GpuMatrix<double>::createStream();
+    stream2 = jsc::GpuMatrix<double>::createStream();
 
     cout<<"init gpu matrices"<<endl;
     d_depth.setZero();
@@ -77,8 +77,8 @@ class DepthGuidedFilterGpu
 
     virtual ~DepthGuidedFilterGpu()
     {
-      GpuMatrix<double>::deleteStream(stream2);
-      GpuMatrix<double>::deleteStream(stream1);
+      jsc::GpuMatrix<double>::deleteStream(stream2);
+      jsc::GpuMatrix<double>::deleteStream(stream1);
     };
 
     virtual void filter(const cv::Mat& depth);
@@ -93,13 +93,13 @@ class DepthGuidedFilterGpu
   double eps_;
   uint32_t B_;
 
-  GpuMatrix<uint16_t> d_depthU16;
-  GpuMatrix<double> d_depth;
-  GpuMatrix<double> d_dSum;
-  GpuMatrix<double> d_dSumT;
-  GpuMatrix<double> d_dSqSum;
-  GpuMatrix<uint8_t> d_haveData_;
-  GpuMatrix<uint8_t> d_haveData2;
+  jsc::GpuMatrix<uint16_t> d_depthU16;
+  jsc::GpuMatrix<double> d_depth;
+  jsc::GpuMatrix<double> d_dSum;
+  jsc::GpuMatrix<double> d_dSumT;
+  jsc::GpuMatrix<double> d_dSqSum;
+  jsc::GpuMatrix<uint8_t> d_haveData_;
+  jsc::GpuMatrix<uint8_t> d_haveData2;
 
   cudaStream_t stream1;
   cudaStream_t stream2;
@@ -116,12 +116,12 @@ class DepthGuidedFilterGpu
   cv::Mat b;
   cv::Mat dSmooth;
   cv::Mat dFlt; 
-  GpuMatrix<T> d_depthSmooth;
-  GpuMatrix<double> d_a; 
-  GpuMatrix<double> d_b; 
-  GpuMatrix<int32_t> d_Ns;
-  GpuMatrix<double> d_aInt; 
-  GpuMatrix<double> d_bInt; 
+  jsc::GpuMatrix<T> d_depthSmooth;
+  jsc::GpuMatrix<double> d_a; 
+  jsc::GpuMatrix<double> d_b; 
+  jsc::GpuMatrix<int32_t> d_Ns;
+  jsc::GpuMatrix<double> d_aInt; 
+  jsc::GpuMatrix<double> d_bInt; 
 
 };
 

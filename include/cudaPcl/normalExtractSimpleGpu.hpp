@@ -13,12 +13,11 @@
 
 // CUDA runtime
 #include <cuda_runtime.h>
+#include <nvidia/helper_cuda.h>
+#include <jsCore/gpuMatrix.hpp>
 
-#include <cudaPcl/helper_cuda.h>
 #include <cudaPcl/root_includes.hpp>
-//#include <convolutionSeparable_common.h>
 #include <cudaPcl/convolutionSeparable_common_small.h>
-#include <cudaPcl/gpuMatrix.hpp>
 #include <cudaPcl/cuda_pc_helpers.h>
 
 using namespace Eigen;
@@ -136,17 +135,17 @@ protected:
     T* d_x, *d_y, *d_z;
     T* d_xu, *d_yu, *d_zu;
     T* d_xv, *d_yv, *d_zv;
-    GpuMatrix<T> d_nImg_;    // normal image - simple 3channel image
+    jsc::GpuMatrix<T> d_nImg_;    // normal image - simple 3channel image
     float *d_nPcl; // using pcl conventions as if it were a PointCloud<PointXYZRGB>
     T *d_xyz;
     T *a,*b,*c; // for intermediate computations
     T *d_w;
 
-    GpuMatrix<uint8_t> d_haveData_;
+    jsc::GpuMatrix<uint8_t> d_haveData_;
 
     int32_t nComp_;
-    GpuMatrix<T> d_normalsComp_;
-    GpuMatrix<uint32_t> d_compInd_;
+    jsc::GpuMatrix<T> d_normalsComp_;
+    jsc::GpuMatrix<uint32_t> d_compInd_;
     cv::Mat normalsComp_;
     cv::Mat compInd_;
     std::vector<uint32_t> indMap_;
@@ -351,7 +350,7 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
       d_normalsComp_.resize(nComp_,3);
       // just shuffle the first 640 entries -> definitely sufficient to ge random init for the algfoerithms
       std::random_shuffle(indMap_.begin(), indMap_.begin() + std::min(640,nComp_));
-      GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
+      jsc::GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
       copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3);
     }
 #ifndef NDEBUG
