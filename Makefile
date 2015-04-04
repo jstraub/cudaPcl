@@ -26,6 +26,9 @@ ifeq "$(BUILD_TYPE)" ""
 BUILD_TYPE="Release"
 endif
 
+me:
+	@$(MAKE) -C pod-build all install
+
 all:
 	@[ -d $(BUILD_PREFIX) ] || mkdir -p $(BUILD_PREFIX) || exit 1
 	@for subdir in $(SUBDIRS); do \
@@ -44,6 +47,8 @@ clean:
     echo "-------------------------------------------"; \
     $(MAKE) -C $$subdir clean; \
   done
+	-if [ -e pod-build/install_manifest.txt ]; then rm -f `cat pod-build/install_manifest.txt`; fi
+	-if [ -d pod-build ]; then $(MAKE) -C pod-build clean; rm -rf pod-build; fi
 	@# Place additional commands here if you have any
 
 pod-build/Makefile:
