@@ -8,8 +8,8 @@
 #include <math.h>
 
 #include <jsCore/gpuMatrix.hpp>
-#include <cudaPcl/timer.hpp>
-#include <cudaPcl/timerLog.hpp>
+#include <jsCore/timer.hpp>
+#include <jsCore/timerLog.hpp>
 
 using std::cout;
 using std::endl;
@@ -104,7 +104,7 @@ class DepthGuidedFilterGpu
   cudaStream_t stream1;
   cudaStream_t stream2;
 
-  TimerLog tLog;
+  jsc::TimerLog tLog;
 
   cv::Mat aInt;
   cv::Mat bInt;
