@@ -154,6 +154,7 @@ pods_install_headers(
   ./include/cudaPcl/openniVisualizer.hpp
   ./include/cudaPcl/pcl_helpers.hpp
   ./include/cudaPcl/root_includes.hpp
+  ./include/cudaPcl/dirSeg.hpp
   DESTINATION cudaPcl)
 
 #install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
