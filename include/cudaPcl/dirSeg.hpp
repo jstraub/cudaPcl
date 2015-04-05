@@ -252,7 +252,7 @@ cv::Mat DirSeg::overlaySeg(cv::Mat img)
   cv::Mat zI = labelsImg();
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
-  projectDirections(Iout,mfAxes(),cfgNormals_.f_d,dirCols_);
+  projectDirections(Iout,centroids(),cfgNormals_.f_d,dirCols_);
   return Iout;
 };
 
