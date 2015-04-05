@@ -15,7 +15,7 @@ namespace po = boost::program_options;
 using std::cout;
 using std::endl;
 
-#include <cudaPcl/timer.hpp>
+#include <jsCore/timer.hpp>
 
 int main (int argc, char** argv)
 {
@@ -76,7 +76,7 @@ int main (int argc, char** argv)
   // estimate normals on a organized point cloud
   if(false)
   {
-    cudaPcl::Timer t0;
+    jsc::Timer t0;
     pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
     pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     ne.setNormalEstimationMethod (ne.AVERAGE_3D_GRADIENT); // 31ms
@@ -90,7 +90,7 @@ int main (int argc, char** argv)
     cout<<t0<<endl;
   }
 
-  cudaPcl::Timer t0;
+  jsc::Timer t0;
   pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
 //  ne.setNormalEstimationMethod (ne.AVERAGE_3D_GRADIENT); // 31ms

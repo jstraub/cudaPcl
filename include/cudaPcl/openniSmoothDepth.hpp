@@ -8,8 +8,8 @@
 #include <stdint.h>
 #include <math.h>
 
+#include <jsCore/timer.hpp>
 #include <cudaPcl/openniVisualizer.hpp>
-#include <cudaPcl/timer.hpp>
 
 using std::cout;
 using std::endl;
@@ -39,7 +39,7 @@ class OpenniSmoothDepth : public OpenniVisualizer
     cv::minMaxLoc(dMap,&dMin,&dMax);
     cout<<"min "<<dMin<<" max "<<dMax<<endl;
     cout<<dMap.at<float>(0,0)<<endl;
-    Timer t;
+    jsc::Timer t;
     cv::Mat dSmooth = smoothDepthCpu(dMap,0.08*0.08,10);
     t.toctic("smoothing");
     cv::Mat dColor = colorizeDepth(dMap);
@@ -61,7 +61,7 @@ class OpenniSmoothDepth : public OpenniVisualizer
     cv::Mat a(depth.rows, depth.cols, CV_64F);
     cv::Mat b(depth.rows, depth.cols, CV_64F);
     cv::Mat dSmooth(depth.rows, depth.cols, CV_64F);
-    Timer t;
+    jsc::Timer t;
     depth.convertTo(dFlt,CV_64F,1e-3);
 
     cv::Mat haveDataU8 = depth > 10;

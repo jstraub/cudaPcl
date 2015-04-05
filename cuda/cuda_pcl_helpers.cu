@@ -2,12 +2,10 @@
  * Licensed under the MIT license. See the license file LICENSE.
  */
 
-
 #include <stdint.h>
 #include <assert.h>
 #include <nvidia/helper_cuda.h> 
 #include <cudaPcl/cuda_pc_helpers.h>
-
 
 /*
  * compute the xyz images using the inverse focal length invF

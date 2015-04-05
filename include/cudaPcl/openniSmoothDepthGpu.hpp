@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#include <cudaPcl/timer.hpp>
+#include <jsCore/timer.hpp>
 #include <cudaPcl/openniVisualizer.hpp>
 #include <cudaPcl/depthGuidedFilter.hpp>
 
@@ -41,7 +41,7 @@ class OpenniSmoothDepthGpu : public OpenniVisualizer
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
     cv::Mat dColor = colorizeDepth(dMap,30,4000);
 
-    cudaPcl::Timer t;
+    jsc::Timer t;
     depthFilter->filter(dMap);
     cv::Mat dSmooth = depthFilter->getOutput();
     t.toctic("smoothing");
