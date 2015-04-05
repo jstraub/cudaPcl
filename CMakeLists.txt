@@ -138,7 +138,25 @@ pods_install_libraries(cudaPcl)
 pods_install_executables(pclGrabber pclBenchmark pclNormals
   openniSmoothNormals openniSmoothDepth)
 
-install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
-          FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
-          FILES_MATCHING PATTERN "*.hpp")
+pods_install_headers(
+  ./include/cudaPcl/convolutionSeparable_common.h 
+  ./include/cudaPcl/convolutionSeparable_common_small.h
+  ./include/cudaPcl/cuda_pc_helpers.h
+  ./include/cudaPcl/cudaSphereHelpers.h
+  ./include/cudaPcl/cv_helpers.hpp
+  ./include/cudaPcl/depthGuidedFilter.hpp
+  ./include/cudaPcl/freenect2Grabber.hpp
+  ./include/cudaPcl/normalExtractSimpleGpu.hpp
+  ./include/cudaPcl/openniGrabber.hpp
+  ./include/cudaPcl/openniSmoothDepth.hpp
+  ./include/cudaPcl/openniSmoothDepthGpu.hpp
+  ./include/cudaPcl/openniSmoothNormalsGpu.hpp
+  ./include/cudaPcl/openniVisualizer.hpp
+  ./include/cudaPcl/pcl_helpers.hpp
+  ./include/cudaPcl/root_includes.hpp
+  DESTINATION cudaPcl)
+
+#install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
+#          FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
+#          FILES_MATCHING PATTERN "*.hpp")
