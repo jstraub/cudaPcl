@@ -27,6 +27,15 @@ This code depends on the following other libraries and was tested under Ubuntu
 The GPU kernels were tested on a Nvidia Quadro K2000M with compute
 capability 3.0.
 
+### Install
+
+Once you have those dependencies in place run
+```
+make checkout && make configure && make 
+```
+This will checkout dependencies from some of my other repos and compile
+everything to ./build/
+
 ### Library
 *libcudaPcl.so* collects all the cuda code into one shared library. The rest
 of the code is in the form of header files.
