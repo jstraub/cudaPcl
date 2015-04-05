@@ -3,6 +3,15 @@
  */
 #pragma once
 
+#include <Eigen/Dense>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <jsCore/timerLog.hpp>
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
 #include <cudaPcl/depthGuidedFilter.hpp>
@@ -70,7 +79,7 @@ class DirSeg
     cv::Mat overlaySeg(cv::Mat img);
 
 protected:
-    const static K_MAX = 10;
+    const static uint32_t K_MAX = 10;
 
     bool haveLabels_;
     jsc::TimerLog tLog_;
