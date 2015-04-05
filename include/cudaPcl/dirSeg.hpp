@@ -58,7 +58,7 @@ class DirSeg
      */
     virtual void compute(const cv::Mat& depth)
     {compute((uint16_t*)depth.data, depth.cols, depth.rows);};
-    virtual void compute(const uint16_t* depth, uint32_t w, uint32_t h)
+    virtual void compute(const uint16_t* depth, uint32_t w, uint32_t h);
       /*
        * compute dirSeg from surface normals stored on the CPU
        */
@@ -105,6 +105,8 @@ protected:
      * the normals on GPU already.
      */
     virtual void compute_() = 0;
+    /* get lables in input format */
+    virtual void getLabels_() = 0;
 };
 
 // ------------------- impl --------------------------------------
@@ -113,7 +115,7 @@ DirSeg::DirSeg(const cudaPcl::CfgSmoothNormals& cfgNormals, string
   : haveLabels_(false),
   tLog_(pathOut+string("./timer.log"),3,10,"TimerLog"),
   cfgNormals_(cfgNormals),
-  depthFilter_(NULL), normalExtract_(NULL),
+  depthFilter_(NULL), normalExtract_(NULL)
 {
   fillJET();
   dirCols_ = Matrix<uint8_t,Dynamic,Dynamic>(K_MAX,3);
@@ -129,7 +131,6 @@ DirSeg::~DirSeg()
 {
   delete normalExtract_;
   delete depthFilter_;
-  fout_.close();
 };
 
 void DirSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
@@ -188,26 +189,12 @@ void DirSeg::compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc)
   compute_();
 };
 
-
-MatrixXf DirSeg::mfAxes()
-{
-  MatrixXf mfAx = MatrixXf::Zero(3,6);
-  for(uint32_t k=0; k<6; ++k){
-    int j = k/2; // which of the rotation columns does this belong to
-    float sign = (- float(k%2) +0.5f)*2.0f; // sign of the axis
-    mfAx.col(k) = sign*cRmf_.col(j);
-  }
-  return mfAx;
-}
-
-
 const VectorXu& DirSeg::labels()
 {
   if(!haveLabels_)
   {
     if(z_.rows() != w_*h_) z_.resize(w_*h_);
-    normalExtract_->uncompressCpu(optSO3_->z().data(),
-        optSO3_->z().rows(), z_.data(), z_.rows());
+    getLabels_();
     haveLabels_ = true;
   }
   return z_;
