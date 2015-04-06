@@ -174,7 +174,7 @@ NormalExtractSimpleGpu<T>::NormalExtractSimpleGpu(T f_depth, uint32_t w, uint32_
   : invF_(1./f_depth), w_(w), h_(h), cudaReady_(false), nCachedPc_(false),
    nCachedImg_(false), pcComputed_(false), nCachedComp_(false), compress_(compress),
    d_nImg_(h*w,3),
-   d_haveData_(h,w), d_normalsComp_(h*w,3), d_compInd_(w*h,1)
+   d_haveData_(h,w), d_normalsComp_(h*w,3), d_compInd_(w*h,1), h_dbg(NULL)
 {
   cout<<"calling prepareCUDA"<<endl;
   cout<<cudaReady_<<endl;
@@ -202,10 +202,10 @@ NormalExtractSimpleGpu<T>::~NormalExtractSimpleGpu()
   checkCudaErrors(cudaFree(b));
   checkCudaErrors(cudaFree(c));
 //#ifdef WEIGHTED
-  if(d_w) checkCudaErrors(cudaFree(d_w));
+  if(d_w != NULL) checkCudaErrors(cudaFree(d_w));
 //#endif
 //  free(h_nPcl);
-  free(h_dbg);
+  if(h_dbg != NULL) free(h_dbg);
 };
 
 
