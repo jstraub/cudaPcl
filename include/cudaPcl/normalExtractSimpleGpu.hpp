@@ -343,7 +343,9 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
     cv::Mat haveDat = haveData();
     indMap_.clear();
     indMap_.reserve(w*h);
-    for(uint32_t i=0; i<w*h; ++i) if(haveDat.at<uint8_t>(i) ==1) indMap_.push_back(i);
+    for(uint32_t i=0; i<w*h; ++i) 
+      if(haveDat.at<uint8_t>(i) ==1)
+        indMap_.push_back(i);
     nComp_ = indMap_.size();
     if (nComp_ > 0)
     {

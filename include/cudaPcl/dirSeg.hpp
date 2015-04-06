@@ -129,8 +129,8 @@ DirSeg::DirSeg(const cudaPcl::CfgSmoothNormals& cfgNormals, string
 
 DirSeg::~DirSeg()
 {
-  delete normalExtract_;
   delete depthFilter_;
+  delete normalExtract_;
 };
 
 void DirSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
