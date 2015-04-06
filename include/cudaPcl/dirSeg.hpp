@@ -206,7 +206,7 @@ cv::Mat DirSeg::labelsImg()
   cv::Mat zIrgb(h_,w_,CV_8UC3);
   for(uint32_t i=0; i<w_; i+=1)
     for(uint32_t j=0; j<h_; j+=1)
-      if(z_(w_*j +i) < 6)
+      if(z_(w_*j +i) < K_)
       {
         uint32_t idz = z_(w_*j +i);
         zIrgb.at<cv::Vec3b>(j,i)[0] = dirCols_(idz,0);
