@@ -250,6 +250,8 @@ cv::Mat DirSeg::overlaySeg(cv::Mat img)
     rgb = img;
   }
   cv::Mat zI = labelsImg();
+  cout <<zI.cols<<" x "<<zI.rows<<endl;
+  cout <<rgb.cols<<" x "<<rgb.rows<<endl;
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
   projectDirections(Iout,centroids(),cfgNormals_.f_d,dirCols_);
