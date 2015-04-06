@@ -70,7 +70,7 @@ class DirSeg
 
     virtual MatrixXf centroids() = 0;
     virtual const VectorXu& labels();
-    cv::Mat labelsImg(bool scaleColors);
+    cv::Mat labelsImg(bool scaleColors=false);
     cv::Mat normalsImg();
     cv::Mat smoothNormalsImg();
     cv::Mat smoothDepthImg();
