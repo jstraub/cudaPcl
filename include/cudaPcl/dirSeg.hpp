@@ -70,7 +70,7 @@ class DirSeg
 
     virtual MatrixXf centroids() = 0;
     virtual const VectorXu& labels();
-    cv::Mat labelsImg();
+    cv::Mat labelsImg(bool scaleColors);
     cv::Mat normalsImg();
     cv::Mat smoothNormalsImg();
     cv::Mat smoothDepthImg();
@@ -208,9 +208,15 @@ const VectorXu& DirSeg::labels()
   return z_;
 };
 
-cv::Mat DirSeg::labelsImg()
+cv::Mat DirSeg::labelsImg(bool scaleColors)
 {
   labels();
+
+  if(scaleColors) 
+    scaleDirColors(K_);
+  else
+    scaleDirColors(K_MAX);
+
   cv::Mat zIrgb(h_,w_,CV_8UC3);
   for(uint32_t i=0; i<w_; i+=1)
     for(uint32_t j=0; j<h_; j+=1)
@@ -258,10 +264,9 @@ cv::Mat DirSeg::overlaySeg(cv::Mat img, bool showDirs, bool scaleColors)
   }else{
     rgb = img;
   }
-  cv::Mat zI = labelsImg();
-  if(scaleColors) scaleDirColors(K_);
-  cout <<zI.cols<<" x "<<zI.rows<<endl;
-  cout <<rgb.cols<<" x "<<rgb.rows<<endl;
+  cv::Mat zI = labelsImg(scaleColors);
+//  cout <<zI.cols<<" x "<<zI.rows<<endl; cout <<rgb.cols<<" x
+//  "<<rgb.rows<<endl;
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
   if(showDirs)
