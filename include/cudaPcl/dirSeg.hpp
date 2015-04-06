@@ -76,7 +76,8 @@ class DirSeg
     cv::Mat smoothDepthImg();
     cv::Mat smoothDepth(){ return this->depthFilter_->getOutput();};
     cv::Mat normalsImgRaw(){ return normalExtract_->normalsImg();};
-    cv::Mat overlaySeg(cv::Mat img);
+    cv::Mat overlaySeg(cv::Mat img, bool showDirs = true, 
+        bool scaleColors = false);
 
 protected:
     const static uint32_t K_MAX = 10;
@@ -107,6 +108,8 @@ protected:
     virtual void compute_() = 0;
     /* get lables in input format */
     virtual void getLabels_() = 0;
+
+    void scaleDirColors(uint32_t K);
 };
 
 // ------------------- impl --------------------------------------
@@ -118,13 +121,7 @@ DirSeg::DirSeg(const cudaPcl::CfgSmoothNormals& cfgNormals, string
   depthFilter_(NULL), normalExtract_(NULL)
 {
   fillJET();
-  dirCols_ = Matrix<uint8_t,Dynamic,Dynamic>(K_MAX,3);
-  for(uint32_t k=0; k<K_MAX; ++k)
-  {
-    dirCols_(k,0) = static_cast<uint8_t>(floor(JET_r_[k*255/K_MAX]*255));
-    dirCols_(k,1) = static_cast<uint8_t>(floor(JET_g_[k*255/K_MAX]*255));
-    dirCols_(k,2) = static_cast<uint8_t>(floor(JET_b_[k*255/K_MAX]*255));
-  }
+  scaleDirColors(K_MAX);
 };
 
 DirSeg::~DirSeg()
@@ -132,6 +129,17 @@ DirSeg::~DirSeg()
   delete depthFilter_;
   delete normalExtract_;
 };
+
+void DirSeg::scaleDirColors(uint32_t K)
+{
+  dirCols_ = Matrix<uint8_t,Dynamic,Dynamic>(K,3);
+  for(uint32_t k=0; k<K; ++k)
+  {
+    dirCols_(k,0) = static_cast<uint8_t>(floor(JET_r_[k*255/K]*255));
+    dirCols_(k,1) = static_cast<uint8_t>(floor(JET_g_[k*255/K]*255));
+    dirCols_(k,2) = static_cast<uint8_t>(floor(JET_b_[k*255/K]*255));
+  }
+}
 
 void DirSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
 {
@@ -209,9 +217,10 @@ cv::Mat DirSeg::labelsImg()
       if(z_(w_*j +i) < K_)
       {
         uint32_t idz = z_(w_*j +i);
-        zIrgb.at<cv::Vec3b>(j,i)[0] = dirCols_(idz,0);
+        // BGR
+        zIrgb.at<cv::Vec3b>(j,i)[2] = dirCols_(idz,0);
         zIrgb.at<cv::Vec3b>(j,i)[1] = dirCols_(idz,1);
-        zIrgb.at<cv::Vec3b>(j,i)[2] = dirCols_(idz,2);
+        zIrgb.at<cv::Vec3b>(j,i)[0] = dirCols_(idz,2);
       }else{
         zIrgb.at<cv::Vec3b>(j,i)[0] = 255;
         zIrgb.at<cv::Vec3b>(j,i)[1] = 255;
@@ -236,7 +245,7 @@ cv::Mat DirSeg::smoothDepthImg()
   return dI;
 }
 
-cv::Mat DirSeg::overlaySeg(cv::Mat img)
+cv::Mat DirSeg::overlaySeg(cv::Mat img, bool showDirs, bool scaleColors)
 {
   cv::Mat rgb;
   if(img.channels() == 1)
@@ -250,11 +259,13 @@ cv::Mat DirSeg::overlaySeg(cv::Mat img)
     rgb = img;
   }
   cv::Mat zI = labelsImg();
+  if(scaleColors) scaleDirColors(K_);
   cout <<zI.cols<<" x "<<zI.rows<<endl;
   cout <<rgb.cols<<" x "<<rgb.rows<<endl;
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
-  projectDirections(Iout,centroids(),cfgNormals_.f_d,dirCols_);
+  if(showDirs)
+    projectDirections(Iout,centroids(),cfgNormals_.f_d,dirCols_);
   return Iout;
 };
 
