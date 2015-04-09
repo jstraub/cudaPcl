@@ -125,11 +125,11 @@ void OpenniSmoothNormalsGpu::visualizeNormals()
   cv::imshow("normals",nIRGB_);
   if (compress_)  cv::imshow("dcomp",normalsComp_);
 
-  std::vector<cv::Mat> nChans(3);
-  cv::split(normalsImg_,nChans);
-  cv::Mat nNans = nChans[0].clone();
-  showNans(nNans);
-  cv::imshow("normal Nans",nNans);
+//  std::vector<cv::Mat> nChans(3);
+//  cv::split(normalsImg_,nChans);
+//  cv::Mat nNans = nChans[0].clone();
+//  showNans(nNans);
+//  cv::imshow("normal Nans",nNans);
 
   cv::Mat haveData = normalExtract->haveData();
   cv::imshow("haveData",haveData*200);

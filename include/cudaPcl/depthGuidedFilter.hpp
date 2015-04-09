@@ -153,13 +153,24 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
 
   cudaStreamSynchronize(stream2);  // wait for stream 2 to finish
 //  guidedFilter_ab_gpu(d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
-  guidedFilter_ab_gpu(d_depth.data(),d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
+  guidedFilter_ab_gpu(d_depth.data(),d_haveData_.data(),
+//  guidedFilter_ab_gpu(d_haveData_.data(),
+      d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
       d_dSum.data(), d_dSqSum.data(),eps_,B_,w_,h_);
   //    d_haveData2.get((uint8_t*)haveData.data,h_,w_); // get the valid data after
   //    cv::integral(haveData,Ns,CV_32S); // TODO hide transfer
 
   d_a.get((double*)a.data,h_,w_); // important to not getAsync since itll wait till the guided filter is done
   d_b.getAsync((double*)b.data,h_,w_,stream1); // get while computing integral image on a
+
+//  cv::imshow("haveData2",haveData*255);
+//  cv::Mat haveData2;
+//  haveData.copyTo(haveData2);
+//  d_haveData2.get((uint8_t*)haveData2.data,h_,w_);   
+//  cv::imshow("haveData3",haveData2*255);
+  cv::imshow("a",a);
+  cv::waitKey(10);
+  cout<<"a"<<endl;
 
   tLog.toctic(2,3);
   cv::integral(a,aInt,CV_64F);

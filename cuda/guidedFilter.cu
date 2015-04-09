@@ -77,8 +77,11 @@ inline bool integralCheck(uint8_t* haveData, int32_t i, int32_t j, int32_t
   if(!haveData[*lu] || !haveData[*ld] || !haveData[*ru] || !haveData[*rd]
       || iN ==0 || jN == 0 || iP == h-1 || jP == w-1)
   {
-//  printf("%d %d: %d %d %d %d\n",i,j,iN,jN,iP,jP);
-    return false;
+//  printf("%d %d: %d %d %d %d\n",i,j,iN,jN,iP,jP); 
+//
+//  TODO: testing 
+//
+//  return false;
   }
 //
 
@@ -101,8 +104,9 @@ inline bool integralCheck(uint8_t* haveData, int32_t i, int32_t j, int32_t
 };
 
 template<typename T, uint32_t BLK_SIZE, int32_t B>
-__global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t* haveDataAfter, T* a, T* b, int32_t*
-    Ns, T* dSum, T* dSqSum, double eps, uint32_t w, uint32_t h)
+__global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t*
+    haveDataAfter, T* a, T* b, int32_t* Ns, T* dSum, T* dSqSum, double
+    eps, uint32_t w, uint32_t h)
 {
 
   const int idx = threadIdx.x + blockIdx.x*blockDim.x;
@@ -120,14 +124,14 @@ __global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t* haveDataAfter
       return;
     }
     const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
-    if(n < (2*B)*(2*B))
-    {
-      haveDataAfter[id] = 0;
-//      haveData[id] =0;
-//      b[id] = 0.0;
-//      a[id] = 1.0;
-      return;
-    }
+//    if(n < (2*B)*(2*B))
+//    {
+//      haveDataAfter[id] = 0;
+////      haveData[id] =0;
+////      b[id] = 0.0;
+////      a[id] = 1.0;
+//      return;
+//    }
     const T muG = integralGet<T>(dSum,lu,ld,rd,ru);
     const T s = integralGet<T>(dSqSum,lu,ld,rd,ru);
     const T muSq = muG*muG;
@@ -140,9 +144,9 @@ __global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t* haveDataAfter
   }
 }
 
-void guidedFilter_ab_gpu(uint8_t* haveData, uint8_t* haveDataAfter, double* a, double* b, int32_t* Ns,
-    double* dSum, double* dSqSum, double eps, uint32_t B, uint32_t w, uint32_t
-    h)
+void guidedFilter_ab_gpu(uint8_t* haveData, uint8_t* haveDataAfter,
+    double* a, double* b, int32_t* Ns, double* dSum, double* dSqSum,
+    double eps, uint32_t B, uint32_t w, uint32_t h)
 {
   dim3 threadsSq(16,16,1);
   dim3 blocksSq(w/16+(w%16>0?1:0), h/16+(h%16>0?1:0),1);
@@ -265,8 +269,9 @@ void guidedFilter_out_gpu(uint8_t* haveData, double* depth, double* aInt,
  // ------------------------------- testing -------------------------------------
 
 template<typename T, uint32_t BLK_SIZE, int32_t B>
-__global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* haveDataAfter, T* a, T* b, int32_t*
-    Ns, T* dSum, T* dSqSum, double eps, uint32_t w, uint32_t h)
+__global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData,
+    uint8_t* haveDataAfter, T* a, T* b, int32_t* Ns, T* dSum, T*
+    dSqSum, double eps, uint32_t w, uint32_t h)
 {
 
   const int idx = threadIdx.x + blockIdx.x*blockDim.x;
@@ -282,11 +287,11 @@ __global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* have
       return;
     }
     const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
-    if(n < (2*B)*(2*B))
-    {
-      haveDataAfter[id] = 0;
-      return;
-    }
+//    if(n < (2*B)*(2*B))
+//    {
+//      haveDataAfter[id] = 0;
+//      return;
+//    }
     const T muG = integralGet<T>(dSum,lu,ld,rd,ru);
     const T s = integralGet<T>(dSqSum,lu,ld,rd,ru);
     const T muSq = muG*muG;
