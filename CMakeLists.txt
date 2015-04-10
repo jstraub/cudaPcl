@@ -79,8 +79,8 @@ cuda_add_library(cudaPcl SHARED
   ./cuda/cuda_pcl_helpers.cu
   ./cuda/integral.cu
   ./cuda/guidedFilter.cu
-  ./src/pcl_helpers.cpp
   ./cuda/convolutionSeparable.cu
+#  ./src/pcl_helpers.cpp
 #  ./cuda/bilateralFilter.cu
 #  ./cuda/optimizationSO3.cu
 )
