@@ -40,6 +40,7 @@ message(${CUDA_TOOLKIT_ROOT_DIR})
 message(${CUDA_LIBRARIES})
 message(${Boost_LIBRARY_DIRS})
 message(${OpenCV_LIBS})
+message(${OpenCV_INCLUDE_DIRS})
 #message(${PCL_INCLUDE_DIRS})
 
 include_directories(
@@ -47,6 +48,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   ${CUDA_TOOLKIT_INCLUDE}
+  ${OpenCV_INCLUDE_DIRS}
 #  include/nvidia/
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/common/inc
 #  ${CUDA_TOOLKIT_ROOT_DIR}/samples/3_Imaging/convolutionSeparable/
@@ -85,7 +87,6 @@ target_link_libraries (openniSmoothDepth
   opencv_core opencv_highgui opencv_contrib  opencv_imgproc
   pcl_io pcl_visualization OpenNI XnVNite
   vtkCommon vtkFiltering vtkRendering
-   ${OpenCV_LIBS}
   )
 
 cuda_add_executable(openniSmoothNormals ./src/openniSmoothNormals.cpp

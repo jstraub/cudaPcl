@@ -3,11 +3,12 @@
  */
 
 #pragma once
+
+#include <iostream>
+
 #include <pcl/io/openni_grabber.h>
 #include <pcl/io/openni_camera/openni_depth_image.h>
 #include <pcl/io/openni_camera/openni_image.h>
-
-#include <iostream>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -17,7 +18,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include <cudaPcl/openniGrabber.hpp>
-
 //#define USE_PCL_VIEWER
 
 //#include <pcl/point_cloud.h>
