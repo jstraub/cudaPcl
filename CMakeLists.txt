@@ -118,7 +118,12 @@ if(NOT DRC AND OPENNI)
   target_link_libraries (pclGrabber boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
 
+  add_executable(pclBenchmark ./src/pclBenchmark.cpp)
+  target_link_libraries (pclBenchmark boost_system boost_thread
+    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+
   pods_install_executables(pclGrabber openniSmoothNormals
+    pclBenchmark 
     openniSmoothDepth)
 endif()
 #add_executable(freenect2Vis ./src/freenect2Visualizer.cpp)
@@ -127,12 +132,9 @@ endif()
 #  opencv_highgui opencv_core
 #  )
 
-add_executable(pclBenchmark ./src/pclBenchmark.cpp)
-target_link_libraries (pclBenchmark boost_system boost_thread
-  pcl_common pcl_io pcl_visualization OpenNI XnVNite)
 
   pods_install_libraries(cudaPcl)
-  pods_install_executables(pclBenchmark pclNormals)
+  pods_install_executables(pclNormals)
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
