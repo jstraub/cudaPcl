@@ -50,7 +50,8 @@ class DepthGuidedFilterGpu
       d_dSum(h_+1,w_+1), d_dSumT(h_+1,w_+1), d_dSqSum(h_+1,w_+1),
       d_haveData_(h_,w_),d_haveData2(h_,w_), tLog("t.log",1), aInt(h_+1,w_+1,CV_64F),
       bInt(h_+1,w_+1,CV_64F), Ns(h_+1,w_+1,CV_32S), dSum(h_+1,w_+1,CV_64F),
-      dSqSum(h_+1,w_+1,CV_64F), haveData(h_, w_, CV_8U), a(h_, w_, CV_64F),
+      dSqSum(h_+1,w_+1,CV_64F), haveData(h_, w_, CV_8U), haveData2(h_, w_, CV_8U),
+      a(h_, w_, CV_64F),
       b(h_, w_, CV_64F), dSmooth(h_, w_, CV_64F), dFlt(h_,w_,CV_64F),
       d_depthSmooth(h_,w_), d_a(h_,w_), d_b(h_,w_), d_Ns(h_+1,w_+1),
       d_aInt(h_+1,w_+1), d_bInt(h_+1,w_+1) 
@@ -112,6 +113,7 @@ class DepthGuidedFilterGpu
   cv::Mat dSum; 
   cv::Mat dSqSum;
   cv::Mat haveData;
+  cv::Mat haveData2;
   cv::Mat a;
   cv::Mat b;
   cv::Mat dSmooth;
@@ -153,8 +155,8 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
 
   cudaStreamSynchronize(stream2);  // wait for stream 2 to finish
 //  guidedFilter_ab_gpu(d_haveData_.data(),d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
-  guidedFilter_ab_gpu(d_depth.data(),d_haveData_.data(),
-//  guidedFilter_ab_gpu(d_haveData_.data(),
+//  guidedFilter_ab_gpu(d_depth.data(),d_haveData_.data(),
+  guidedFilter_ab_gpu(d_haveData_.data(),
       d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
       d_dSum.data(), d_dSqSum.data(),eps_,B_,w_,h_);
   //    d_haveData2.get((uint8_t*)haveData.data,h_,w_); // get the valid data after
@@ -163,14 +165,16 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   d_a.get((double*)a.data,h_,w_); // important to not getAsync since itll wait till the guided filter is done
   d_b.getAsync((double*)b.data,h_,w_,stream1); // get while computing integral image on a
 
-//  cv::imshow("haveData2",haveData*255);
-//  cv::Mat haveData2;
-//  haveData.copyTo(haveData2);
-//  d_haveData2.get((uint8_t*)haveData2.data,h_,w_);   
+//  cv::imshow("haveData2",haveData*255); 
+//
+// update Ns with new counts TODO: update streams
+  d_haveData2.get((uint8_t*)haveData2.data,h_,w_);   
+  cv::integral(haveData2,Ns,CV_32S); 
+  d_Ns.setAsync((int32_t*)Ns.data,h_+1,w_+1,stream2);
 //  cv::imshow("haveData3",haveData2*255);
-  cv::imshow("a",a);
-  cv::waitKey(10);
-  cout<<"a"<<endl;
+//  cv::imshow("a",a);
+//  cv::waitKey(10);
+//  cout<<"a"<<endl;
 
   tLog.toctic(2,3);
   cv::integral(a,aInt,CV_64F);
@@ -182,7 +186,8 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
 
   d_bInt.set((double*)bInt.data,h_+1,w_+1);
   cudaStreamSynchronize(stream2);  // wait for stream 2 to finish
-  guidedFilter_out_gpu(d_haveData2.data(),d_depth.data(),d_aInt.data(),
+//  guidedFilter_out_gpu(d_haveData2.data(),d_depth.data(),d_aInt.data(),
+  guidedFilter_out_gpu(d_haveData_.data(),d_depth.data(),d_aInt.data(),
       d_bInt.data(),d_Ns.data(),d_depthSmooth.data(),B_,w_,h_);
 //      d_bInt.data(),d_Ns.data(),d_depthSmooth.data(),B_/2+(B_%2>0?1:0),w_,h_);
   //    d_depthSmooth.get((T*)dSmooth.data,h_,w_);

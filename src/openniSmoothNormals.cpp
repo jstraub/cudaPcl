@@ -61,13 +61,16 @@ int main (int argc, char** argv)
   findCudaDevice(argc,(const char**)argv);
   cudaPcl::OpenniSmoothNormalsGpu v(f_d, eps, B, compress);
 
-  if(false)
+  if(true)
   { // load a specific image and process
-    cv::Mat depth = cv::imread("../python/table_0_d.png",CV_LOAD_IMAGE_ANYDEPTH);
+    cv::Mat depth = cv::imread("../../python/table_0_d.png",CV_LOAD_IMAGE_ANYDEPTH);
     for(uint32_t t=0; t<1; ++t)
+    {
       v.depth_cb((uint16_t*)depth.data,depth.cols,depth.rows);
-    
-    cv::waitKey(0);
+      v.visualizeD();
+      v.visualizeNormals();
+      cv::waitKey(0);
+    }
   }
 
   // run the grabber

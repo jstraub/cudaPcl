@@ -61,13 +61,13 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
   virtual void normals_cb(float* d_normalsImg, uint8_t* d_haveData, uint32_t w, uint32_t h)
   {
 //    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr nDispPtr =
-//      normalExtract->normalsPc();
+//    normalExtract->normalsPc();
     boost::mutex::scoped_lock updateLock(updateModelMutex);
 //    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(
 //        new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
     normalsImg_ = normalExtract->normalsImg();
 
-    if(true)
+    if(false)
     {
       static int frameN = 0;
       if(frameN==0) if(system("mkdir ./normals/") >0){
