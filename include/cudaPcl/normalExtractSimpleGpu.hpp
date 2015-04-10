@@ -11,6 +11,10 @@
 #include <pcl/point_types.h>
 #include <pcl/features/normal_3d.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 // CUDA runtime
 #include <cuda_runtime.h>
 #include <nvidia/helper_cuda.h>
