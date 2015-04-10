@@ -416,7 +416,7 @@ template<typename T>
 void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
 {
   // CUDA preparations
-  cout << "Allocating and initializing CUDA arrays..."<<endl;
+  cout << "Allocating and initializing CUDA arrays... "<< w<<" "<<h<<endl;
   checkCudaErrors(cudaMalloc((void **)&d_depth, w * h * sizeof(uint16_t)));
   checkCudaErrors(cudaMalloc((void **)&d_x, w * h * sizeof(T)));
   checkCudaErrors(cudaMalloc((void **)&d_y, w * h * sizeof(T)));

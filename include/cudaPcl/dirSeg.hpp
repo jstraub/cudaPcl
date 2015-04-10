@@ -58,7 +58,17 @@ class DirSeg
      * compute dirSeg from depth image stored on the CPU
      */
     virtual void compute(const cv::Mat& depth)
-    {compute((uint16_t*)depth.data, depth.cols, depth.rows);};
+    {
+      if (depth.type() == CV_16SC1)
+        compute((uint16_t*)depth.data, depth.cols, depth.rows);
+      else //if(depth.type() == CV_32F)
+      {
+        cv::Mat d16S(depth.rows,depth.cols,CV_16SC1);
+        depth.convertTo(d16S,CV_16SC1);
+        compute((uint16_t*)d16S.data, depth.cols, depth.rows);
+//      }else if(depth.type() == CV_64F) {
+      }
+    };
     virtual void compute(const uint16_t* depth, uint32_t w, uint32_t h);
       /*
        * compute dirSeg from surface normals stored on the CPU

@@ -33,6 +33,7 @@ inline void normalizeImg(cv::Mat& I)
       I.at<float>(j,i) = (I.at<float>(j,i)-minI)/(maxI-minI);
     }
 }
+
 inline void showNans(cv::Mat& I)
 {
   for(int i=0; i<I.cols; ++i)
