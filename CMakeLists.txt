@@ -40,12 +40,14 @@ message(${CUDA_LIBRARIES})
 message(${Boost_LIBRARY_DIRS})
 message("VTK ")
 message(${VTK_LIBRARY_DIRS})
+message(${VTK_INCLUDE_DIRS})
 
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
   ${CUDA_TOOLKIT_INCLUDE}
   ${Boost_INCLUDE_DIRS}
+  ${VTK_INCLUDE_DIRS}
 )
 
 link_directories(
