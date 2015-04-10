@@ -30,6 +30,7 @@ set(OPENNI OFF)
 
 find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
+find_package (VTK REQUIRED)
 FIND_PACKAGE (Boost 1.54 REQUIRED)
 message(${EIGEN3_INCLUDE_DIR})
 message(${CUDA_INCLUDE_DIRS})
@@ -37,7 +38,8 @@ message(${CUDA_TOOLKIT_INCLUDE})
 message(${CUDA_TOOLKIT_ROOT_DIR})
 message(${CUDA_LIBRARIES})
 message(${Boost_LIBRARY_DIRS})
-
+message("VTK ")
+message(${VTK_LIBRARY_DIRS})
 
 include_directories(
   include
@@ -48,6 +50,7 @@ include_directories(
 
 link_directories(
   ${Boost_LIBRARY_DIRS}
+  ${VTK_LIBRARY_DIRS}
 )
 
 if(NOT DRC)
