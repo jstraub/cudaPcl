@@ -38,15 +38,15 @@ __device__
 inline bool integralCheck(uint8_t* haveData, int32_t i, int32_t j, int32_t
     w, int32_t h, int32_t* lu, int32_t* ld, int32_t* rd, int32_t* ru)
 {
-  int32_t iN = max(i-B,0);
-  int32_t jN = max(j-B,0);
-  int32_t iP = min(i+B,h-1);
-  int32_t jP = min(j+B,w-1);
+  int32_t iN = max(i-2-B,0);
+  int32_t iP = min(i+1+B,h);
+  int32_t jN = max(j-2-B,0);
+  int32_t jP = min(j+1+B,w);
 
-  *lu = iN*w + jN;
-  *ru = iN*w + jP;
-  *ld = iP*w + jN;
-  *rd = iP*w + jP;
+  *lu = iN*(w+1) + jN;
+  *ru = iN*(w+1) + jP;
+  *ld = iP*(w+1) + jN;
+  *rd = iP*(w+1) + jP;
 //  while(iN < i && (!haveData[*ru] || !haveData[*lu]))
 //  {
 //    iN ++;
@@ -74,18 +74,21 @@ inline bool integralCheck(uint8_t* haveData, int32_t i, int32_t j, int32_t
 //    *rd -=1;
 //  }
 //
-  if(!haveData[*lu] || !haveData[*ld] || !haveData[*ru] || !haveData[*rd]
-      || iN ==0 || jN == 0 || iP == h-1 || jP == w-1)
-  {
-//  printf("%d %d: %d %d %d %d\n",i,j,iN,jN,iP,jP);
-    return false;
-  }
+//  if(!haveData[*lu] || !haveData[*ld] || !haveData[*ru] || !haveData[*rd]
+//      || iN ==0 || jN == 0 || iP == h-1 || jP == w-1)
+//  {
+////  printf("%d %d: %d %d %d %d\n",i,j,iN,jN,iP,jP); 
+////
+////  TODO: testing 
+////
+////  return false;
+//  }
 //
-
-  *lu += iN;
-  *ru += iN;
-  *ld += iP;
-  *rd += iP;
+//
+//  *lu += iN;
+//  *ru += iN;
+//  *ld += iP;
+//  *rd += iP;
 
 //  *lu = iN*(w+1) + jN;
 //  *ru = iN*(w+1) + jP;
@@ -101,15 +104,17 @@ inline bool integralCheck(uint8_t* haveData, int32_t i, int32_t j, int32_t
 };
 
 template<typename T, uint32_t BLK_SIZE, int32_t B>
-__global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t* haveDataAfter, T* a, T* b, int32_t*
-    Ns, T* dSum, T* dSqSum, double eps, uint32_t w, uint32_t h)
+__global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t*
+    haveDataAfter, T* a, T* b, int32_t* Ns, T* dIntSum, T* dIntSqSum, double
+    eps, uint32_t w, uint32_t h)
 {
 
   const int idx = threadIdx.x + blockIdx.x*blockDim.x;
   const int idy = threadIdx.y + blockIdx.y*blockDim.y;
   const int id = idx+w*idy;
 
-  if((idx<w)&&(idy<h) && (haveData[id]))
+  if((idx<w)&&(idy<h))
+//   if(haveData[id])
   {
     int32_t lu,ld,rd,ru;
     if(!integralCheck<B>(haveData,idy,idx,w,h,&lu,&ld,&rd,&ru)) // get the coordinates for integral img
@@ -120,29 +125,52 @@ __global__ void guidedFilter_ab_kernel(uint8_t* haveData, uint8_t* haveDataAfter
       return;
     }
     const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
-    if(n < (2*B)*(2*B))
+    if (n<B)//*(B-1))
     {
+      b[id] = 0.0;
+      a[id] = 0.0;
       haveDataAfter[id] = 0;
-//      haveData[id] =0;
-//      b[id] = 0.0;
-//      a[id] = 1.0;
-      return;
-    }
-    const T muG = integralGet<T>(dSum,lu,ld,rd,ru);
-    const T s = integralGet<T>(dSqSum,lu,ld,rd,ru);
-    const T muSq = muG*muG;
+//    else if(n==1.0)
+//    {
+//      const T dSum = integralGet<T>(dIntSum,lu,ld,rd,ru);
+//      b[id] = dSum/n;
+//      a[id] = 0.0;
+//      haveDataAfter[id] = 1;
+    }else{
+//    if(n < (2*B)*(2*B)) { haveDataAfter[id] = 0;
+////      haveData[id] =0;
+////      b[id] = 0.0;
+////      a[id] = 1.0;
+//      return;
+//    }
+//
+//    -------------- old ----------------
+//    const T muG = integralGet<T>(dIntSum,lu,ld,rd,ru);
+//    const T s = integralGet<T>(dIntSqSum,lu,ld,rd,ru);
+//    const T muSq = muG*muG;
+//    const T n1 = n-1.;
+//    const T a_ = ((n*s-muSq)*n1)/((s*n-muSq+eps*n1*n)*n);
+//    -------------- old ----------------
+    
+    const T dSum = integralGet<T>(dIntSum,lu,ld,rd,ru);
+    const T S = integralGet<T>(dIntSqSum,lu,ld,rd,ru);
+    const T dSumSq = dSum*dSum;
     const T n1 = n-1.;
-    const T a_ = ((n*s-muSq)*n1)/((s*n-muSq+eps*n1*n)*n);
+    const T a_ = (n*S-dSumSq)/(n*n/n1*S-dSumSq+n*n*eps);
 
-    b[id] = muG*(1. - a_)/n;
+    b[id] = dSum/n*(1. - a_);
     a[id] = a_;
     haveDataAfter[id] = 1;
+    }
+//  }else{
+//    b[id] = 0.0;
+//    a[id] = 0.0;
   }
 }
 
-void guidedFilter_ab_gpu(uint8_t* haveData, uint8_t* haveDataAfter, double* a, double* b, int32_t* Ns,
-    double* dSum, double* dSqSum, double eps, uint32_t B, uint32_t w, uint32_t
-    h)
+void guidedFilter_ab_gpu(uint8_t* haveData, uint8_t* haveDataAfter,
+    double* a, double* b, int32_t* Ns, double* dSum, double* dSqSum,
+    double eps, uint32_t B, uint32_t w, uint32_t h)
 {
   dim3 threadsSq(16,16,1);
   dim3 blocksSq(w/16+(w%16>0?1:0), h/16+(h%16>0?1:0),1);
@@ -186,15 +214,18 @@ __global__ void guidedFilter_out_kernel(uint8_t* haveData, T* depth, T* aInt, T*
       }
 //    integralCheck<B>(haveData,idy,idx,w,h,&lu,&ld,&rd,&ru);
       const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
-//    if(n < (2*B)*(2*B))
-//    {
-//      depthSmooth[id] = 0.0;
+      if(n<B)//*B-1)
+      {
+        depthSmooth[id] = missingValue;
+      }else{
+//    if(n < (2*B)*(2*B)) { depthSmooth[id] = 0.0;
 ////      haveData[id] =0;
 //      return;
 //    }
-      const T muA = integralGet<T>(aInt,lu,ld,rd,ru);
-      const T muB = integralGet<T>(bInt,lu,ld,rd,ru);
-      depthSmooth[id] = (muA*depth[id] + muB)/n;
+        const T muA = integralGet<T>(aInt,lu,ld,rd,ru);
+        const T muB = integralGet<T>(bInt,lu,ld,rd,ru);
+        depthSmooth[id] = (muA*depth[id] + muB)/n;
+      }
     }else{
       depthSmooth[id] = missingValue;
     }
@@ -265,8 +296,9 @@ void guidedFilter_out_gpu(uint8_t* haveData, double* depth, double* aInt,
  // ------------------------------- testing -------------------------------------
 
 template<typename T, uint32_t BLK_SIZE, int32_t B>
-__global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* haveDataAfter, T* a, T* b, int32_t*
-    Ns, T* dSum, T* dSqSum, double eps, uint32_t w, uint32_t h)
+__global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData,
+    uint8_t* haveDataAfter, T* a, T* b, int32_t* Ns, T* dSum, T*
+    dSqSum, double eps, uint32_t w, uint32_t h)
 {
 
   const int idx = threadIdx.x + blockIdx.x*blockDim.x;
@@ -282,11 +314,11 @@ __global__ void guidedFilter_ab_kernel(T* depth,uint8_t* haveData, uint8_t* have
       return;
     }
     const T n = integralGet<int32_t>(Ns,lu,ld,rd,ru); 
-    if(n < (2*B)*(2*B))
-    {
-      haveDataAfter[id] = 0;
-      return;
-    }
+//    if(n < (2*B)*(2*B))
+//    {
+//      haveDataAfter[id] = 0;
+//      return;
+//    }
     const T muG = integralGet<T>(dSum,lu,ld,rd,ru);
     const T s = integralGet<T>(dSqSum,lu,ld,rd,ru);
     const T muSq = muG*muG;

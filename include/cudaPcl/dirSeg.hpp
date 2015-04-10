@@ -15,6 +15,7 @@
 #include <jsCore/timerLog.hpp>
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
 #include <cudaPcl/depthGuidedFilter.hpp>
+
 namespace cudaPcl{
 
 void projectDirections(cv::Mat& I, const MatrixXf&
