@@ -110,7 +110,7 @@ protected:
     /* get lables in input format */
     virtual void getLabels_() = 0;
 
-    void scaleDirColors(uint32_t K);
+    virtual void scaleDirColors(uint32_t K);
 };
 
 // ------------------- impl --------------------------------------
