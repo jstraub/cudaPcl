@@ -39,6 +39,7 @@ message(${CUDA_TOOLKIT_INCLUDE})
 message(${CUDA_TOOLKIT_ROOT_DIR})
 message(${CUDA_LIBRARIES})
 message(${Boost_LIBRARY_DIRS})
+message(${OpenCV_LIBS})
 #message(${PCL_INCLUDE_DIRS})
 
 include_directories(
@@ -78,11 +79,13 @@ cuda_add_executable(openniSmoothDepth ./src/openniSmoothDepth.cpp
   ./cuda/guidedFilter.cu
   ./cuda/convolutionSeparable.cu
   )
-target_link_libraries (openniSmoothDepth boost_system boost_thread pcl_common
- boost_program_options
+target_link_libraries (openniSmoothDepth 
+  boost_system boost_thread pcl_common
+  boost_program_options
   opencv_core opencv_highgui opencv_contrib  opencv_imgproc
   pcl_io pcl_visualization OpenNI XnVNite
   vtkCommon vtkFiltering vtkRendering
+   ${OpenCV_LIBS}
   )
 
 cuda_add_executable(openniSmoothNormals ./src/openniSmoothNormals.cpp
