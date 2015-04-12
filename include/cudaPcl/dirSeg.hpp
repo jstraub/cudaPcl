@@ -19,17 +19,18 @@
 namespace cudaPcl{
 
 void projectDirections(cv::Mat& I, const MatrixXf&
-    dirs, double f_d, const Matrix<uint8_t,Dynamic,Dynamic>& colors)
+    dirs, double f_d, uint32_t w,  uint32_t h, const
+    Matrix<uint8_t,Dynamic,Dynamic>& colors)
 {
   double scale = 0.1;
   VectorXf p0(3); p0 << 0.35,0.25,1;
-  double u0 = p0(0)/p0(2)*f_d + 320.;
-  double v0 = p0(1)/p0(2)*f_d + 240.;
+  double u0 = p0(0)/p0(2)*f_d + 0.5*w;
+  double v0 = p0(1)/p0(2)*f_d + 0.5*h;
   for(uint32_t k=0; k < dirs.cols(); ++k)
   {
     VectorXf p1 = p0 + dirs.col(k)*scale;
-    double u1 = p1(0)/p1(2)*f_d + 320.;
-    double v1 = p1(1)/p1(2)*f_d + 240.;
+    double u1 = p1(0)/p1(2)*f_d + 0.5*w;
+    double v1 = p1(1)/p1(2)*f_d + 0.5*h;
     cv::line(I, cv::Point(u0,v0), cv::Point(u1,v1),
         CV_RGB(colors(k,0),colors(k,1),colors(k,2)), 2, CV_AA);
 
@@ -215,6 +216,7 @@ const VectorXu& DirSeg::labels()
     if(z_.rows() != w_*h_) z_.resize(w_*h_);
     getLabels_();
     haveLabels_ = true;
+    cout<<"DirSeg::labels() got "<<z_.size()<<" labels"<<endl;
   }
   return z_;
 };
@@ -281,7 +283,7 @@ cv::Mat DirSeg::overlaySeg(cv::Mat img, bool showDirs, bool scaleColors)
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
   if(showDirs)
-    projectDirections(Iout,centroids(),cfgNormals_.f_d,dirCols_);
+    projectDirections(Iout,centroids(),cfgNormals_.f_d,w_,h_,dirCols_);
   return Iout;
 };
 

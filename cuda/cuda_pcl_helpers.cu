@@ -67,8 +67,8 @@ __global__ void depth2float(uint16_t* d, T* d_float, uint8_t* haveData, int w, i
 {
   const int idx = threadIdx.x + blockIdx.x*blockDim.x;
   const int idy = threadIdx.y + blockIdx.y*blockDim.y;
-  const int id = idx+w*idy;
-  const int idOut = idx+outStep*idy;
+  const uint32_t id = idx+w*idy;
+  const uint32_t idOut = idx+outStep*idy;
 
   if(idx<w && idy<h)
   {
@@ -245,9 +245,9 @@ __global__ void derivatives2normalsPcl(T* d_x, T* d_y, T* d_z,
     T* d_xv, T* d_yv, T* d_zv, 
     T* d_n, int w, int h)
 {
-  const int idx = threadIdx.x + blockIdx.x*blockDim.x;
-  const int idy = threadIdx.y + blockIdx.y*blockDim.y;
-  const int id = idx+w*idy;
+  const uint32_t idx = threadIdx.x + blockIdx.x*blockDim.x;
+  const uint32_t idy = threadIdx.y + blockIdx.y*blockDim.y;
+  const uint32_t id = idx+w*idy;
 
   if(idx<w && idy<h)
   {
@@ -375,9 +375,9 @@ __global__ void derivatives2normals(T* d_x, T* d_y, T* d_z,
     T* d_xv, T* d_yv, T* d_zv, 
     T* d_n, uint8_t* d_haveData, int w, int h)
 {
-  const int idx = threadIdx.x + blockIdx.x*blockDim.x;
-  const int idy = threadIdx.y + blockIdx.y*blockDim.y;
-  const int id = idx+w*idy;
+  const uint32_t idx = threadIdx.x + blockIdx.x*blockDim.x;
+  const uint32_t idy = threadIdx.y + blockIdx.y*blockDim.y;
+  const uint32_t id = idx+w*idy;
 
   if(idx<w && idy<h)
   {
@@ -424,12 +424,14 @@ __global__ void derivatives2normals(T* d_x, T* d_y, T* d_z,
 //  ny=0.0f/0.0f;
 //  nz=0.0f/0.0f;
 //} 
-      if(idy > 440)
-      { // stupid fix for weird artifact
-        nx = 0./0.;
-        ny = 0./0.;
-        nz = 0./0.;
-      }
+//
+// STUPID ME
+//      if(idy > 440)
+//      { // stupid fix for weird artifact
+//        nx = 0./0.;
+//        ny = 0./0.;
+//        nz = 0./0.;
+//      }
 
     // the 4th component is always 1.0f - due to PCL conventions!
       d_ni[0] = nx*sgn;
@@ -888,7 +890,7 @@ template<typename T, uint32_t STEP>
 __global__ void haveData_kernel(T* d_x, uint8_t* d_haveData, int32_t N)
 {
 
-  const int id = threadIdx.x + blockIdx.x*blockDim.x;
+  const uint32_t id = threadIdx.x + blockIdx.x*blockDim.x;
   if(id < N)
   {
     if (d_x[id*STEP] != d_x[id*STEP])
@@ -904,7 +906,9 @@ void haveDataGpu(float* d_x, uint8_t* d_haveData, int32_t N, uint32_t step)
   dim3 threads(256,1,1);
   dim3 blocks(N/256 + (N%256>0?1:0),1,1);
 
-  if(step == 3) // image layout
+  if(step == 1) // vector layout
+    haveData_kernel<float,1><<<blocks, threads>>>(d_x,d_haveData,N);
+  else if(step == 3) // image layout
     haveData_kernel<float,3><<<blocks, threads>>>(d_x,d_haveData,N);
   else if(step == 8) // pcl
     haveData_kernel<float,8><<<blocks, threads>>>(d_x,d_haveData,N);
@@ -917,7 +921,9 @@ void haveDataGpu(double* d_x, uint8_t* d_haveData, int32_t N, uint32_t step)
   dim3 threads(256,1,1);
   dim3 blocks(N/256 + (N%256>0?1:0),1,1);
 
-  if(step == 3) // image layout
+  if(step == 1) // vector layout
+    haveData_kernel<double,3><<<blocks, threads>>>(d_x,d_haveData,N);
+  else if(step == 3) // image layout
     haveData_kernel<double,3><<<blocks, threads>>>(d_x,d_haveData,N);
   else if(step == 8) // pcl
     haveData_kernel<double,8><<<blocks, threads>>>(d_x,d_haveData,N);
