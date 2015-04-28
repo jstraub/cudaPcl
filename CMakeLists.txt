@@ -72,13 +72,13 @@ if(NOT DRC)
     )
 endif()
 
-add_executable(pclNormals ./src/pclNormals.cpp)
-target_link_libraries (pclNormals
-  boost_system boost_thread  boost_program_options
-  pcl_common pcl_io pcl_search pcl_visualization pcl_features
-  vtkCommon vtkFiltering vtkRendering
-  OpenNI XnVNite
-  opencv_core opencv_highgui)
+#add_executable(pclNormals ./src/pclNormals.cpp)
+#target_link_libraries (pclNormals
+#  boost_system boost_thread  boost_program_options
+#  pcl_common pcl_io pcl_search pcl_visualization pcl_features
+#  vtkCommon vtkFiltering vtkRendering
+#  OpenNI XnVNite
+#  opencv_core opencv_highgui)
 
 cuda_add_library(cudaPcl SHARED
   ./cuda/cuda_pcl_helpers.cu
@@ -139,7 +139,7 @@ endif()
 
 
   pods_install_libraries(cudaPcl)
-  pods_install_executables(pclNormals)
+#  pods_install_executables(pclNormals)
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
