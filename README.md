@@ -64,7 +64,7 @@ below).
 
 Plug in your Kinect and run the following from the cudaPcl folder:
 ```
-./build/bin/realtimeDDPvMF_openni --lambdaDeg 100 
+ ./build/bin/openniSmoothNormals 
 ```
 
 ### Library
