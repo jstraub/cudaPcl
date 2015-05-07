@@ -22,19 +22,50 @@ This code depends on the following other libraries and was tested under Ubuntu
 - Opencv 2 (2.3.1)
 - Eigen3 (3.0.5) 
 - cuda 5.5 or 6.5 
-- Boost (1.52)
+- Boost (1.54)
 
 The GPU kernels were tested on a Nvidia Quadro K2000M with compute
 capability 3.0.
 
 ### Install
 
-Once you have those dependencies in place run
+This package uses [the pods build
+system](http://sourceforge.net/p/pods/home/Home/). Used widely at CSAIL
+MIT the build system makes it easy to break up software projects into
+small packages that can be checked out and compiled automatically (see
+below).
+
+- *Linux:* 
+
+    Install Eigen3, Boost, OpenCV, and PCL
+
+    ```
+    sudo apt-get install libeigen3-dev libboost-dev libopencv-dev libpcl-1.7-all-dev
+    ```
+
+    Install the appropriate CUDA version matching with your nvidia
+    drivers. On our machines we use `nvidia-340-dev` with
+    `libcuda1-340 cuda-6-5 cuda-toolkit-6-5`
+
+    Clone this repository and compile the code:
+
+    ```
+    git clone git@github.com:jstraub/rtDDPvMF; cd rtDDPvMF;
+    make checkout; make configure; make -j6; make install;
+    ```
+    
+    Note that this will checkout several other necessary repositories.
+    To update all repositories run
+    
+    ```
+    make update; make configure; make -j6; make install;
+    ```
+### Getting Started
+
+Plug in your Kinect and run the following from the cudaPcl folder:
 ```
-make checkout && make configure && make 
+./build/bin/realtimeDDPvMF_openni --lambdaDeg 100 
 ```
-This will checkout dependencies from some of my other repos and compile
-everything to ./build/
 
 ### Library
 *libcudaPcl.so* collects all the cuda code into one shared library. The rest

@@ -25,8 +25,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-g -Wall -Wno-deprecated -O2 -finline-functions -DN
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wno-deprecated")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=\"sm_35,compute_35\")
 
-set(DRC ON )
-set(OPENNI OFF)
+set(DRC OFF)
+set(OPENNI ON)
 
 find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
