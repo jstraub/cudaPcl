@@ -33,6 +33,7 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
 
   virtual void depth_cb(const uint16_t * depth, uint32_t w, uint32_t h)
   {
+    if(w==0 || h==0) return;
     if(!this->depthFilter)
     {
       this->depthFilter = new DepthGuidedFilterGpu<float>(w,h,eps_,B_);
@@ -60,6 +61,7 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
    */
   virtual void normals_cb(float* d_normalsImg, uint8_t* d_haveData, uint32_t w, uint32_t h)
   {
+    if(w==0 || h==0) return;
 //    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr nDispPtr =
 //    normalExtract->normalsPc();
     boost::mutex::scoped_lock updateLock(updateModelMutex);
@@ -108,9 +110,9 @@ void OpenniSmoothNormalsGpu::visualizeD()
     cv::Mat dSmooth = this->depthFilter->getOutput();
     this->dColor_ = colorizeDepth(dSmooth,0.3,4.0);
     cv::imshow("d",dColor_);
-    cv::Mat dNans = dSmooth.clone();
-    showNans(dNans);
-    cv::imshow("depth Nans",dNans);
+//    cv::Mat dNans = dSmooth.clone();
+//    showNans(dNans);
+//    cv::imshow("depth Nans",dNans);
   }
 };
 
@@ -131,8 +133,8 @@ void OpenniSmoothNormalsGpu::visualizeNormals()
 //  showNans(nNans);
 //  cv::imshow("normal Nans",nNans);
 
-  cv::Mat haveData = normalExtract->haveData();
-  cv::imshow("haveData",haveData*200);
+//  cv::Mat haveData = normalExtract->haveData();
+//  cv::imshow("haveData",haveData*200);
 
 #ifdef USE_PCL_VIEWER
   //copy again
