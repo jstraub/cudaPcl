@@ -119,6 +119,18 @@ if(NOT DRC AND OPENNI)
     pcl_io pcl_visualization OpenNI XnVNite
     vtkCommon vtkFiltering vtkRendering
     )
+
+  cuda_add_executable(openniSmoothNormals_file
+    ./src/openniSmoothNormals_file.cpp
+    )
+  target_link_libraries (openniSmoothNormals_file
+    cudaPcl
+    boost_system boost_thread pcl_common boost_program_options
+    opencv_core opencv_highgui opencv_contrib opencv_imgproc
+    pcl_io pcl_visualization OpenNI XnVNite
+    vtkCommon vtkFiltering vtkRendering
+    )
+
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
@@ -128,6 +140,7 @@ if(NOT DRC AND OPENNI)
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
 
   pods_install_executables(pclGrabber openniSmoothNormals
+    openniSmoothNormals_file
     pclBenchmark 
     openniSmoothDepth)
 endif()
