@@ -40,6 +40,7 @@ class OpenniSmoothDepthGpu : public OpenniVisualizer
 
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
     cv::Mat dColor = colorizeDepth(dMap,30,4000);
+    this->d_ = dMap.clone();
 
     jsc::Timer t;
     depthFilter->filter(dMap);

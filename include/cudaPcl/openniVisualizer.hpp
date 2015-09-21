@@ -5,6 +5,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 
 #include <pcl/io/openni_grabber.h>
 #include <pcl/io/openni_camera/openni_depth_image.h>
@@ -54,7 +55,8 @@ public:
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
     {
       boost::mutex::scoped_lock updateLock(updateModelMutex);
-      dColor_ = colorizeDepth(dMap,30.,4000.);
+      dColor_ = colorizeDepth(dMap, 30.,4000.);
+      d_ = dMap.clone();
     }
     this->update();
   };  
@@ -67,6 +69,7 @@ protected:
   bool update_;
   boost::mutex updateModelMutex;
   cv::Mat dColor_;
+  cv::Mat d_;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_;
 
   void update(){
@@ -74,7 +77,7 @@ protected:
     update_=true;
   };
 
-  virtual void visualize_();
+  virtual void visualize_(char key);
   virtual void visualizeRGB();
   virtual void visualizeD();
   virtual void visualizeNormals();
@@ -104,11 +107,25 @@ private:
 
 // ------------------------------------ impl ---------------------------------
 
-void OpenniVisualizer::visualize_()
+void OpenniVisualizer::visualize_(char key)
 {
+  static int64_t frameId = 0;
   visualizeRGB();
   visualizeD();
   visualizeNormals();
+  if (key == 's') {
+    std::cout << "key: " << key << std::endl;
+    std::stringstream ss;
+    ss << "./frame_" << std::setfill('0') << std::setw(9) << frameId << "_";
+    std::string prefix = ss.str();
+    if (this->rgb_.rows > 0 && this->rgb_.cols > 0)
+      cv::imwrite(prefix+std::string("_rgb.png"),this->rgb_);
+    if (dColor_.rows > 0 && dColor_.cols > 0) {
+      cv::imwrite(prefix+std::string("_d.png"), d_);
+      std::cout<<d_.rows << "x"<<d_.cols<<std::endl;
+    }
+  }
+  ++frameId;
 };
 
 void OpenniVisualizer::visualizeRGB()
@@ -158,12 +175,12 @@ void OpenniVisualizer::visualizerThread()
 #else
   while (42)
   {
-    cv::waitKey(10);
+    char key = cv::waitKey(10);
     // Get lock on the boolean update and check if cloud was updated
     boost::mutex::scoped_lock updateLock(updateModelMutex);
     if (update_)
     {
-      visualize_();
+      visualize_(key);
       update_ = false;
     }
   }
