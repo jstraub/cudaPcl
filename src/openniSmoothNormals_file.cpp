@@ -17,6 +17,7 @@
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
 
 #include <Eigen/Dense>
+#include <pcl/io/ply_io.h>
 
 namespace po = boost::program_options;
 using namespace Eigen;
@@ -91,13 +92,15 @@ int main (int argc, char** argv)
   if(outputPath.compare("") != 0)
   {
     cout<<"output writen to "<<outputPath<<endl;
-    std::ofstream out(outputPath.data(), std::ofstream::out);
+    std::ofstream out(outputPath.data(), std::ofstream::out | std::ofstream::binary);
     out<<h<<" "<<w<<" "<<3<<endl;
-    for (uint32_t i=0; i<h; ++i)
-      for (uint32_t j=0; j<w; ++j)
-        out<< normalsImg.at<cv::Vec3f>(i,j)[0] << " "
-          << normalsImg.at<cv::Vec3f>(i,j)[1] << " "
-          << normalsImg.at<cv::Vec3f>(i,j)[2] <<endl;
+    char* data = reinterpret_cast<char*>(normalsImg.data);
+    out.write(data, w*h*3*sizeof(float));
+//    for (uint32_t i=0; i<h; ++i)
+//      for (uint32_t j=0; j<w; ++j)
+//        out<< normalsImg.at<cv::Vec3f>(i,j)[0] << " "
+//          << normalsImg.at<cv::Vec3f>(i,j)[1] << " "
+//          << normalsImg.at<cv::Vec3f>(i,j)[2] <<endl;
     out.close();
   }
 
