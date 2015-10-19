@@ -91,8 +91,7 @@ int main (int argc, char** argv)
 
   if(outputPath.compare("") != 0)
   {
-    cout<<"output writen to "<<outputPath<<endl;
-    std::ofstream out(outputPath.data(), std::ofstream::out | std::ofstream::binary);
+    std::ofstream out((outputPath+".normals").data(), std::ofstream::out | std::ofstream::binary);
     out<<h<<" "<<w<<" "<<3<<endl;
     char* data = reinterpret_cast<char*>(normalsImg.data);
     out.write(data, w*h*3*sizeof(float));
@@ -102,6 +101,18 @@ int main (int argc, char** argv)
 //          << normalsImg.at<cv::Vec3f>(i,j)[1] << " "
 //          << normalsImg.at<cv::Vec3f>(i,j)[2] <<endl;
     out.close();
+    cout<<"output writen to "<<outputPath<< ".normals" <<endl;
+  
+    cv::Mat dSmooth = depthFilter->getOutput();
+    cv::Mat dSmoothS;
+    dSmooth.convertTo(dSmoothS, CV_16U, 1000.);
+    cv::imwrite((outputPath+"_dSmooth.png").data(), dSmoothS);
+    std::cout << "output written to " << (outputPath+"_dSmooth.png") << std::endl;
+//    cv::Mat depth2 = cv::imread((outputPath+"_dSmooth.png").data(),CV_LOAD_IMAGE_ANYDEPTH);
+//    cv::imshow("n",dSmoothS);
+//    cv::imshow("d",depth);
+//    cv::imshow("d2",depth2);
+//    while(42) cv::waitKey(10);
   }
 
   if(display)
