@@ -139,9 +139,15 @@ if(NOT DRC AND OPENNI)
   target_link_libraries (pclBenchmark boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
 
+  add_executable(rndTransformPc ./src/randomlyTransformPointClouds.cpp)
+  target_link_libraries(rndTransformPc boost_system boost_thread
+    boost_program_options
+    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+
   pods_install_executables(pclGrabber openniSmoothNormals
     openniSmoothNormals_file
     pclBenchmark 
+    rndTransformPc
     openniSmoothDepth)
 endif()
 #add_executable(freenect2Vis ./src/freenect2Visualizer.cpp)

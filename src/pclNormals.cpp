@@ -49,13 +49,11 @@ int main (int argc, char** argv)
   cout<< " scale for normal estimation radius: "<<scale<<endl;
   cout<< " output to "<<outputPath<<endl;
 
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-
-    {
-      std::cout << "Cloud reading failed." << std::endl;
-      return (-1);
-    }
+  {
+    std::cout << "Cloud reading failed." << std::endl;
+    return (-1);
+  }
 
 //  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("test_pcd.pcd", *cloud) == -1) //* load the file
 //  {
