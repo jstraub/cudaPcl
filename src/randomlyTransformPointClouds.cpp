@@ -104,7 +104,17 @@ int main (int argc, char** argv)
   std::cout << "sampled random transformation:\n" 
     << T.matrix() << std::endl;
 
-  pcl::transformPointCloud(pcIn, pcOut, T);
+  // Transform both points by T as well as surface normals by R
+  // manually since the standard transformPointCloud does not seem to
+  // touch the Surface normals.
+  pcOut = pcIn;
+  for (uint32_t i=0; i<pcOut.size(); ++i) {
+    Eigen::Map<Eigen::Vector3f> p_map(&(pcOut.at(i).x));
+    Eigen::Vector4f p(pcOut.at(i).x, pcOut.at(i).x, pcOut.at(i).z,1.);
+    p_map = (T*p).topRows<3>();
+    Eigen::Map<Eigen::Vector3f> n(pcOut.at(i).normal);
+    n = T.rotation()*n;
+  }
   
   pcl::PLYWriter writer;
   writer.write(outputPath, pcOut, false, false);
