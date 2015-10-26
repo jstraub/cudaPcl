@@ -109,9 +109,8 @@ int main (int argc, char** argv)
   // touch the Surface normals.
   pcOut = pcIn;
   for (uint32_t i=0; i<pcOut.size(); ++i) {
-    Eigen::Map<Eigen::Vector3f> p_map(&(pcOut.at(i).x));
-    Eigen::Vector4f p(pcOut.at(i).x, pcOut.at(i).x, pcOut.at(i).z,1.);
-    p_map = (T*p).topRows<3>();
+    Eigen::Map<Eigen::Vector3f> p(&(pcOut.at(i).x));
+    p = T.rotation() * p + T.translation();
     Eigen::Map<Eigen::Vector3f> n(pcOut.at(i).normal);
     n = T.rotation()*n;
   }
