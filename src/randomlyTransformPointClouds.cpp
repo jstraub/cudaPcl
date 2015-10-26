@@ -107,7 +107,7 @@ int main (int argc, char** argv)
   pcl::transformPointCloud(pcIn, pcOut, T);
   
   pcl::PLYWriter writer;
-  writer.write(outputPath, pcOut);
+  writer.write(outputPath, pcOut, false, false);
 
   std::ofstream out(transformationOutputPath.c_str());
   out << "q_w q_x q_y q_z t_x t_y t_z" << std::endl;
