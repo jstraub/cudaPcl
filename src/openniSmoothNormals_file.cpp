@@ -83,10 +83,6 @@ int main (int argc, char** argv)
   uint32_t w = depth.cols;
   uint32_t h = depth.rows;
 
-  cv::imshow("g",gray);
- // cv::imshow("g",rgb);
-  cv::waitKey(0);
-
   cudaPcl::DepthGuidedFilterGpu<float>* depthFilter = 
     new cudaPcl::DepthGuidedFilterGpu<float>(w,h,eps,B);
   cudaPcl::NormalExtractSimpleGpu<float>* normalExtract = 

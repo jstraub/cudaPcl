@@ -7,11 +7,11 @@ names = []
 for root, dirs, files in os.walk(nyuPath):
   for file in files:
     name, ending = os.path.splitext(file)
-    if ending == '.png' and not re.search("_d",name) is None:
+    if ending == '.png' and not re.search("_d$",name) is None:
       names.append(name)
 
 print "found ", len(names), " NYU files"
-
+raw_input()
 
 for name in names:
   print " ---- " + name
