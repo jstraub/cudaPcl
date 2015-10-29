@@ -3,6 +3,7 @@
  */
 #include <iostream>
 #include <sstream>
+#include <sys/time.h>
 //#include <random> // can only use with C++11
 #include <pcl/io/ply_io.h>
 #include <pcl/point_types.h>
@@ -85,7 +86,9 @@ int main (int argc, char** argv)
   std::cout<< " sampled transformation to " << transformationOutputPath << std::endl;
 
   // Using boost here because C11 and CUDA seem to have troubles.
-  boost::mt19937 gen;
+  timeval tNow; 
+  gettimeofday(&tNow, NULL);
+  boost::mt19937 gen(tNow.tv_usec);
   boost::normal_distribution<> N(0,1);
   // Sample axis of rotation:
   Eigen::Vector3f axis(N(gen), N(gen), N(gen));
