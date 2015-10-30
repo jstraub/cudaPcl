@@ -63,11 +63,12 @@ int main (int argc, char** argv)
   std::stringstream ssOutPath;
   ssOutPath << outputPath << "_angle_" << angle << "_translation_" <<
     translation << ".ply";
-  outputPath = ssOutPath.str();
 
   std::stringstream ssTransformationFile;
   ssTransformationFile << outputPath << "_TrueTransformation" <<
     "_angle_" << angle << "_translation_" << translation << ".csv";
+
+  outputPath = ssOutPath.str();
   std::string transformationOutputPath = ssTransformationFile.str();
 
   // Load point cloud.
