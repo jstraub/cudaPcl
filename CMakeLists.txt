@@ -131,6 +131,12 @@ if(NOT DRC AND OPENNI)
     vtkCommon vtkFiltering vtkRendering
     )
 
+  add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
+    ./src/pinhole.cpp)
+  target_link_libraries (renderPcFromPc boost_system boost_thread
+    boost_program_options
+    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
@@ -177,6 +183,7 @@ pods_install_headers(
   ./include/cudaPcl/pcl_helpers.hpp
   ./include/cudaPcl/root_includes.hpp
   ./include/cudaPcl/dirSeg.hpp
+  ./include/cudaPcl/pinhole.h
   DESTINATION cudaPcl)
 
 #install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
