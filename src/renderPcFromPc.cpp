@@ -77,9 +77,9 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
       ++hits;
     }
   }
-  std::cout << " # hits: " << hits 
-    << " for total number of pixels in output camera: " << c.GetSize()
-    << " percentage: " << (100.*hits/float(c.GetSize())) << std::endl;
+//  std::cout << " # hits: " << hits 
+//    << " for total number of pixels in output camera: " << c.GetSize()
+//    << " percentage: " << (100.*hits/float(c.GetSize())) << std::endl;
 
   for (uint32_t i=0; i<c.GetW(); ++i)
     for (uint32_t j=0; j<c.GetH(); ++j) 
@@ -92,9 +92,9 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
         pB.rgb = pcIn.at(id(j,i)).rgb;
         pcOut.push_back(pB);
       }
-  std::cout << " output pointcloud size is: " << pcOut.size() 
-    << " percentage of input cloud: "
-    << (100.*pcOut.size()/float(pcIn.size())) << std::endl;
+//  std::cout << " output pointcloud size is: " << pcOut.size() 
+//    << " percentage of input cloud: "
+//    << (100.*pcOut.size()/float(pcIn.size())) << std::endl;
 }
 
 uint32_t VisiblePointsOfPcInCam(const
@@ -199,9 +199,14 @@ int main (int argc, char** argv)
         100*hitsBinA/float(pcOutB.size()));
 
     ++ attempts;
-    std::cout << "overlap: " << overlap 
-      << "% attempt: " << attempts<< std::endl;
+    if (attempts%20 == 0) {
+      std::cout << ".";
+      std::cout.flush();
+    }
   } while(overlap < min_overlap && attempts < 1000);
+  std::cout << std::endl;
+  std::cout << "overlap: " << overlap 
+    << "% attempt: " << attempts<< std::endl;
   if (attempts >= 1000) return 1;
 
   // Now sample another transformation of the same parameters to
