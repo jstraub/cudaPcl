@@ -50,8 +50,8 @@ void SampleTransformation(float angle, float translation,
   t = Eigen::Vector3f(N(gen), N(gen), N(gen));
   t *= translation / t.norm();
 
-  std::cout << "sampled random transformation:\n" 
-    << R << std::endl << t.transpose() << std::endl;
+//  std::cout << "sampled random transformation:\n" 
+//    << R << std::endl << t.transpose() << std::endl;
 }
 
 void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
@@ -116,6 +116,7 @@ int main (int argc, char** argv)
     ("output,o", po::value<string>(),"path to output transformed point cloud")
     ("angle,a", po::value<double>(),"magnitude of rotation (deg)")
     ("translation,t", po::value<double>(),"magnitude of translation (m)")
+    ("min,m", po::value<double>(),"minimum overlap to be accepted (%)")
     ;
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -128,11 +129,13 @@ int main (int argc, char** argv)
 
   double angle = 10.; // In degree
   double translation = 1.0;
+  double min_overlap = 50.;
   string inputPath = "./file.ply";
   string outputPath = "./out";
   if(vm.count("input")) inputPath = vm["input"].as<string>();
   if(vm.count("output")) outputPath = vm["output"].as<string>();
   if(vm.count("angle")) angle = vm["angle"].as<double>();
+  if(vm.count("min")) min_overlap = vm["min"].as<double>();
   if(vm.count("translation")) translation = vm["translation"].as<double>();
 
   std::stringstream ssOutPathA;
@@ -161,32 +164,45 @@ int main (int argc, char** argv)
   std::cout<< " input pointcloud from "<<inputPath<<std::endl;
   std::cout<< "  angular magnitude "<< angle <<std::endl;
   std::cout<< "  translational magnitude "<< translation <<std::endl;
-  std::cout<< " output to "<<outputPathA<<std::endl << " and to " << outputPathB << std::endl;
-  std::cout<< " sampled transformation to " << transformationOutputPath << std::endl;
 
   uint32_t w = 320;
   uint32_t h = 280;
   float f = 540.;
   Eigen::Matrix3f R_A_W, R_B_W;
   Eigen::Vector3f t_A_W, t_B_W;
-  // sample pc A
-  SampleTransformation(angle, translation, R_A_W, t_A_W);
-  cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
-  RenderPointCloud(pcIn, camA, pcOutA);
-  // sample pc B
-  SampleTransformation(angle, translation, R_B_W, t_B_W);
-  cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
-  RenderPointCloud(pcIn, camB, pcOutB);
+  double overlap = 0.;
+  uint32_t attempts = 0;
+  do {
+    pcOutA.clear();
+    pcOutB.clear();
+    // sample pc A
+    SampleTransformation(angle, translation, R_A_W, t_A_W);
+    cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
+    RenderPointCloud(pcIn, camA, pcOutA);
+    if (pcOutA.size() < 10000) continue;
+    // sample pc B
+    SampleTransformation(angle, translation, R_B_W, t_B_W);
+    cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
+    RenderPointCloud(pcIn, camB, pcOutB);
+    if (pcOutB.size() < 10000) continue;
 
-  uint32_t hitsAinB = VisiblePointsOfPcInCam(pcOutA, R_A_W, t_A_W, camB);
-  uint32_t hitsBinA = VisiblePointsOfPcInCam(pcOutB, R_B_W, t_B_W, camA);
+    uint32_t hitsAinB = VisiblePointsOfPcInCam(pcOutA, R_A_W, t_A_W, camB);
+    uint32_t hitsBinA = VisiblePointsOfPcInCam(pcOutB, R_B_W, t_B_W, camA);
+    overlap = std::min(100*hitsAinB/float(pcOutA.size()),
+        100*hitsBinA/float(pcOutB.size()));
 
-  std::cout << "hits of pc A in cam B " << hitsAinB 
-    << " that is " << 100.*hitsAinB/float(pcOutA.size()) << "%"
-    << std::endl;
-  std::cout << "hits of pc B in cam A " << hitsAinB 
-    << " that is " << 100.*hitsBinA/float(pcOutB.size()) << "%"
-    << std::endl;
+//    std::cout << "hits of pc A in cam B " << hitsAinB 
+//      << " that is " << 100.*hitsAinB/float(pcOutA.size()) << "%"
+//      << std::endl;
+//    std::cout << "hits of pc B in cam A " << hitsAinB 
+//      << " that is " << 100.*hitsBinA/float(pcOutB.size()) << "%"
+//      << std::endl;
+
+    std::cout << "overlap: " << overlap 
+      << "% attempt: " << attempts<< std::endl;
+    ++ attempts;
+  } while(overlap < min_overlap && attempts < 1000);
+  if (attempts >= 1000) return 1;
   
   pcl::PLYWriter writer;
   writer.write(outputPathA, pcOutA, false, false);
@@ -201,9 +217,12 @@ int main (int argc, char** argv)
     << " magnitude of translation: " << t_B_A.norm() << std::endl;
 
   std::ofstream out(transformationOutputPath.c_str());
-  out << "q_w q_x q_y q_z t_x t_y t_z" << std::endl;
+  out << "q_w q_x q_y q_z t_x t_y t_z overlap" << std::endl;
   out << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " " 
-    << t(0) << " " << t(1) << " " << t(2);
+    << t(0) << " " << t(1) << " " << t(2) << " " << overlap;
   out.close();
+  std::cout<< " output to "<<outputPathA<<std::endl << " and to " << outputPathB << std::endl;
+  std::cout<< " sampled transformation to " << transformationOutputPath << std::endl;
+  return 0;
 }
 
