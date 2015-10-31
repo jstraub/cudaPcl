@@ -162,11 +162,14 @@ int main (int argc, char** argv)
   // Load point cloud.
   pcl::PointCloud<pcl::PointXYZRGBNormal> pcIn, pcOutA, pcOutB;
   pcl::PLYReader reader;
-  if (reader.read(inputPath, pcIn)) 
+  int err = reader.read(inputPath, pcIn);
+  if (err) {
     std::cout << "error reading " << inputPath << std::endl;
-  else
+    return err;
+  } else {
     std::cout << "loaded pc from " << inputPath << ": " << pcIn.width << "x"
       << pcIn.height << std::endl;
+  }
 
   std::cout<< " input pointcloud from "<<inputPath<<std::endl;
   std::cout<< "  angular magnitude "<< angle <<std::endl;
