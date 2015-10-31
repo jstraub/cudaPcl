@@ -62,6 +62,7 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
   // manually since the standard transformPointCloud does not seem to
   // touch the Surface normals.
   Eigen::MatrixXf d = 1e10*Eigen::MatrixXf::Ones(c.GetH(), c.GetW());
+  Eigen::MatrixXi id = Eigen::MatrixXi::Zero(c.GetH(), c.GetW());
   uint32_t hits = 0;
   for (uint32_t i=0; i<pcIn.size(); ++i) {
     Eigen::Map<const Eigen::Vector3f> pA_W(&(pcIn.at(i).x));
@@ -69,7 +70,10 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
     Eigen::Vector3f p_C;
     Eigen::Vector2i pI;
     if (c.IsInImage(p_W, &p_C, &pI)) { 
-      d(pI(1),pI(0)) = std::min(d(pI(1),pI(0)), p_C(2));
+      if (d(pI(1),pI(0)) >  p_C(2)) {
+        d(pI(1),pI(0)) = p_C(2);
+        id(pI(1),pI(0)) = i;
+      }
       ++hits;
     }
   }
@@ -83,6 +87,9 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
         pcl::PointXYZRGBNormal pB;
         Eigen::Map<Eigen::Vector3f> p_C(&(pB.x));
         p_C = c.UnprojectToCameraCosy(i,j,d(j,i));
+        Eigen::Map<Eigen::Vector3f>(pB.normal) = 
+          Eigen::Map<const Eigen::Vector3f>(pcIn.at(id(j,i)).normal);
+        pB.rgb = pcIn.at(id(j,i)).rgb;
         pcOut.push_back(pB);
       }
   std::cout << " output pointcloud size is: " << pcOut.size() 
@@ -191,18 +198,27 @@ int main (int argc, char** argv)
     overlap = std::min(100*hitsAinB/float(pcOutA.size()),
         100*hitsBinA/float(pcOutB.size()));
 
-//    std::cout << "hits of pc A in cam B " << hitsAinB 
-//      << " that is " << 100.*hitsAinB/float(pcOutA.size()) << "%"
-//      << std::endl;
-//    std::cout << "hits of pc B in cam A " << hitsAinB 
-//      << " that is " << 100.*hitsBinA/float(pcOutB.size()) << "%"
-//      << std::endl;
-
+    ++ attempts;
     std::cout << "overlap: " << overlap 
       << "% attempt: " << attempts<< std::endl;
-    ++ attempts;
   } while(overlap < min_overlap && attempts < 1000);
   if (attempts >= 1000) return 1;
+
+  // Now sample another transformation of the same parameters to
+  // transform pcB
+  Eigen::Matrix3f R_B_B;
+  Eigen::Vector3f t_B_B;
+  SampleTransformation(angle, translation, R_B_B, t_B_B);
+  // Transform pc B
+  for (uint32_t i=0; i<pcOutB.size(); ++i) {
+    Eigen::Map<Eigen::Vector3f> p(&(pcOutB.at(i).x));
+    p = R_B_B * p + t_B_B;
+    Eigen::Map<Eigen::Vector3f> n(pcOutB.at(i).normal);
+    n = R_B_B*n;
+  }
+  // chain the new transformation into the global transformation.
+  R_B_W = R_B_B*R_B_W;
+  t_B_W = R_B_B*t_B_W + t_B_B;
   
   pcl::PLYWriter writer;
   writer.write(outputPathA, pcOutA, false, false);
