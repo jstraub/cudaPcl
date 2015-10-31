@@ -60,13 +60,13 @@ int main (int argc, char** argv)
   if(vm.count("translation")) translation = vm["translation"].as<double>();
 
   std::stringstream ssOutPath;
+  std::stringstream ssTransformationFile;
   ssOutPath << outputPath << "_angle_" << angle << "_translation_" <<
     translation << ".ply";
-  outputPath = ssOutPath.str();
+  ssTransformationFile << outputPath << "_angle_" << angle <<
+    "_translation_" << translation << "_TrueTransformation" << ".csv";
 
-  std::stringstream ssTransformationFile;
-  ssTransformationFile << outputPath << "_TrueTransformation" <<
-    "_angle_" << angle << "_translation_" << translation << ".csv";
+  outputPath = ssOutPath.str();
   std::string transformationOutputPath = ssTransformationFile.str();
 
   // Load point cloud.
