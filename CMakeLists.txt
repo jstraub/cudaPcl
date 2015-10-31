@@ -154,6 +154,7 @@ if(NOT DRC AND OPENNI)
     openniSmoothNormals_file
     pclBenchmark 
     rndTransformPc
+    renderPcFromPc
     openniSmoothDepth)
 endif()
 #add_executable(freenect2Vis ./src/freenect2Visualizer.cpp)
