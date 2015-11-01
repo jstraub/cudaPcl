@@ -147,17 +147,25 @@ int main (int argc, char** argv)
 
   std::stringstream ssOutPathA;
   std::stringstream ssOutPathB;
-  std::stringstream ssTransformationFile;
+  std::stringstream ssTransformationAFile;
+  std::stringstream ssTransformationBFile;
+  std::stringstream ssTransformationTotalFile;
   ssOutPathA << outputPath << "_A_angle_" << angle << "_translation_" <<
     translation << ".ply";
   ssOutPathB << outputPath << "_B_angle_" << angle << "_translation_" <<
     translation << ".ply";
-  ssTransformationFile << outputPath << "_angle_" << angle <<
+  ssTransformationAFile << outputPath << "_angle_" << angle <<
+    "_translation_" << translation << "_Transformation_A_W" << ".csv";
+  ssTransformationBFile << outputPath << "_angle_" << angle <<
+    "_translation_" << translation << "_Transformation_B_W" << ".csv";
+  ssTransformationTotalFile << outputPath << "_angle_" << angle <<
     "_translation_" << translation << "_TrueTransformation" << ".csv";
 
   std::string outputPathA = ssOutPathA.str();
   std::string outputPathB = ssOutPathB.str();
-  std::string transformationOutputPath = ssTransformationFile.str();
+  std::string transformationAOutputPath= ssTransformationAFile.str();
+  std::string transformationBOutputPath= ssTransformationBFile.str();
+  std::string transformationTotalOutputPath = ssTransformationTotalFile.str();
 
   // Load point cloud.
   pcl::PointCloud<pcl::PointXYZRGBNormal> pcIn, pcOutA, pcOutB;
@@ -212,6 +220,27 @@ int main (int argc, char** argv)
     << "% attempt: " << attempts<< std::endl;
   if (attempts >= 1000) return 1;
 
+  {
+    Eigen::Quaternionf q(R_A_W);
+    Eigen::Vector3f t = t_A_W;
+    std::ofstream out(transformationAOutputPath.c_str());
+    out << "q_w q_x q_y q_z t_x t_y t_z size" << std::endl;
+    out << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " " 
+      << t(0) << " " << t(1) << " " << t(2) << " " 
+      << " " << pcOutA.size();
+    out.close();
+  }
+  {
+    Eigen::Quaternionf q(R_B_W);
+    Eigen::Vector3f t = t_B_W;
+    std::ofstream out(transformationBOutputPath.c_str());
+    out << "q_w q_x q_y q_z t_x t_y t_z size" << std::endl;
+    out << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " " 
+      << t(0) << " " << t(1) << " " << t(2) << " " 
+      << " " << pcOutB.size();
+    out.close();
+  }
+
   // Now sample another transformation of the same parameters to
   // transform pcB
   Eigen::Matrix3f R_B_B;
@@ -227,11 +256,14 @@ int main (int argc, char** argv)
   // chain the new transformation into the global transformation.
   R_B_W = R_B_B*R_B_W;
   t_B_W = R_B_B*t_B_W + t_B_B;
-  
+  // Write the Point clouds to files.
   pcl::PLYWriter writer;
   writer.write(outputPathA, pcOutA, false, false);
   writer.write(outputPathB, pcOutB, false, false);
 
+  // Compute the final relative transformation between the PCs in the
+  // as they are saved to file. This is the transformation that any
+  // alignment algorithm needs to find.
   Eigen::Matrix3f R_B_A = R_B_W * R_A_W.transpose();
   Eigen::Vector3f t_B_A = - R_B_W * R_A_W.transpose() * t_A_W + t_B_W;
   Eigen::Quaternionf q(R_B_A);
@@ -240,13 +272,19 @@ int main (int argc, char** argv)
   std::cout << "magnitude of rotation: " << ToDeg(acos(q.w())*2.) 
     << " magnitude of translation: " << t_B_A.norm() << std::endl;
 
-  std::ofstream out(transformationOutputPath.c_str());
-  out << "q_w q_x q_y q_z t_x t_y t_z overlap" << std::endl;
+  std::ofstream out(transformationTotalOutputPath.c_str());
+  out << "q_w q_x q_y q_z t_x t_y t_z overlap sizeA sizeB" << std::endl;
   out << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " " 
-    << t(0) << " " << t(1) << " " << t(2) << " " << overlap;
+    << t(0) << " " << t(1) << " " << t(2) << " " 
+    << overlap << " " << pcOutA.size() << " " << pcOutB.size();
   out.close();
+
   std::cout<< " output to "<<outputPathA<<std::endl << " and to " << outputPathB << std::endl;
-  std::cout<< " sampled transformation to " << transformationOutputPath << std::endl;
+  std::cout<< " sampled total transformation to " << transformationTotalOutputPath << std::endl;
+  std::cout<< " sampled transformation of rendering T_A_W to "
+    << transformationAOutputPath << std::endl;
+  std::cout<< " sampled transformation of rendering T_B_W to "
+    << transformationBOutputPath << std::endl;
   return 0;
 }
 
