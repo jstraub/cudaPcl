@@ -88,7 +88,8 @@ void RenderPointCloud(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
         Eigen::Map<Eigen::Vector3f> p_C(&(pB.x));
         p_C = c.UnprojectToCameraCosy(i,j,d(j,i));
         Eigen::Map<Eigen::Vector3f>(pB.normal) = 
-          Eigen::Map<const Eigen::Vector3f>(pcIn.at(id(j,i)).normal);
+          c.GetR_C_W() * Eigen::Map<const
+          Eigen::Vector3f>(pcIn.at(id(j,i)).normal);
         pB.rgb = pcIn.at(id(j,i)).rgb;
         pcOut.push_back(pB);
       }

@@ -21,6 +21,8 @@ class Pinhole {
   uint32_t GetW() const { return w_;}
   uint32_t GetH() const { return h_;}
   uint32_t GetSize() const { return h_*w_;}
+  const Eigen::Matrix3f& GetR_C_W() const { return R_C_W_;}
+  const Eigen::Vector3f& Gett_C_W() const { return t_C_W_;}
  protected:
   Eigen::Matrix3f R_C_W_;
   Eigen::Vector3f t_C_W_;
