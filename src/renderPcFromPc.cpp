@@ -198,12 +198,12 @@ int main (int argc, char** argv)
     SampleTransformation(angle, translation, R_A_W, t_A_W);
     cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
     RenderPointCloud(pcIn, camA, pcOutA);
-    if (pcOutA.size() < 10000) continue;
+    if (pcOutA.size() < pcIn.size()/10) continue;
     // sample pc B
     SampleTransformation(angle, translation, R_B_W, t_B_W);
     cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
     RenderPointCloud(pcIn, camB, pcOutB);
-    if (pcOutB.size() < 10000) continue;
+    if (pcOutB.size() < pcIn.size()/10) continue;
 
     uint32_t hitsAinB = VisiblePointsOfPcInCam(pcOutA, R_A_W, t_A_W, camB);
     uint32_t hitsBinA = VisiblePointsOfPcInCam(pcOutB, R_B_W, t_B_W, camA);
