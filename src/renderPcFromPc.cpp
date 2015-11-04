@@ -315,11 +315,11 @@ int main (int argc, char** argv)
     << "% attempt: " << attempts<< std::endl;
   if (attempts >= 1000) return 1;
 
+  // Now sample point clouds from those views.
   cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
-  RenderPointCloudNoisy(pcIn, camA, pcOutA, 3);
-
+  RenderPointCloudNoisy(pcIn, camA, pcOutA, 2);
   cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
-  RenderPointCloudNoisy(pcIn, camB, pcOutB, 3);
+  RenderPointCloudNoisy(pcIn, camB, pcOutB, 2);
 
   {
     Eigen::Quaternionf q(R_A_W);
