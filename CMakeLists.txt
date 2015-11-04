@@ -135,7 +135,7 @@ if(NOT DRC AND OPENNI)
     ./src/pinhole.cpp)
   target_link_libraries (renderPcFromPc boost_system boost_thread
     boost_program_options
-    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+    pcl_common  pcl_features pcl_search pcl_io pcl_visualization OpenNI XnVNite)
 
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
