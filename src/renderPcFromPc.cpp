@@ -9,6 +9,7 @@
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 #include "cudaPcl/pinhole.h"
 
@@ -72,7 +73,7 @@ bool RenderPointCloudNoisy(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
     Eigen::Vector3f p_C;
     Eigen::Vector2i pI;
     if (c.IsInImage(p_W, &p_C, &pI)) { 
-      if (d(pI(1),pI(0)) >  p_C(2)) {
+      if (p_C(2) > 0. && d(pI(1),pI(0)) >  p_C(2)) {
         d(pI(1),pI(0)) = p_C(2);
         id(pI(1),pI(0)) = i;
       }
@@ -86,50 +87,69 @@ bool RenderPointCloudNoisy(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
   gettimeofday(&tNow, NULL);
   boost::mt19937 gen(tNow.tv_usec);
   Eigen::Vector3f d_C;
-  d_C << 0.,0.,-1.;
+  d_C << 0.,0.,1.;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+  uint32_t n_sampled = 0;
   for (uint32_t i=0; i<c.GetW(); ++i)
     for (uint32_t j=0; j<c.GetH(); ++j) 
       if (d(j,i) < 100.) {
-        Eigen::Vector3f n_C = c.GetR_C_W() * Eigen::Map<const
+//        Eigen::Vector3f n_C = c.GetR_C_W() * Eigen::Map<const
+//          Eigen::Vector3f>(pcIn.at(id(j,i)).normal);
+        Eigen::Vector3f n_C =  Eigen::Map<const
           Eigen::Vector3f>(pcIn.at(id(j,i)).normal);
         Eigen::Vector3f p_C = c.UnprojectToCameraCosy(i,j,d(j,i));
         double dot = n_C.transpose()*d_C;
         double theta = acos(std::min(std::max(dot, -1.),1.));
-        //http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6375037
-        double sig_L = (0.8+0.035*theta/(M_PI*0.5-theta))* p_C(2)/c.GetF();
-        
-        double sig_z =0.0012 + 0.0019*(p_C(2)-0.4)*(p_C(2)-0.4);
-        if (ToDeg(theta) > 60.) {
-          sig_z += 0.0001/sqrt(p_C(2))*theta*theta/((M_PI*0.5-theta)
-              *(M_PI*0.5-theta));
-        }
-//        std::cout << sig_L << " " << sig_z << std::endl;
-
-        boost::normal_distribution<> N_L(0,sig_L);
-        boost::normal_distribution<> N_z(0,sig_z);
-        for (uint32_t k=0; k< nUpsample; ++k) {
+        if (ToDeg(theta) < 80.) {
+          //http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6375037
+          double sig_L = (0.8+0.035*theta/(M_PI*0.5-theta))* p_C(2)/c.GetF();
+          double sig_z =0.0012 + 0.0019*(p_C(2)-0.4)*(p_C(2)-0.4);
+          if (ToDeg(theta) > 60.) {
+            sig_z += 0.0001/sqrt(p_C(2))*theta*theta/((M_PI*0.5-theta)
+                *(M_PI*0.5-theta));
+          }
+ //        std::cout << sig_L << " " << sig_z << std::endl;
+          boost::normal_distribution<> N_L(0,sig_L);
+          boost::normal_distribution<> N_z(0,sig_z);
+          for (uint32_t k=0; k< nUpsample; ++k) {
+            pcl::PointXYZRGB pB;
+            pB.rgb = pcIn.at(id(j,i)).rgb;
+            Eigen::Map<Eigen::Vector3f> p_Cout(&(pB.x));
+            p_Cout =  p_C;
+//            if (i%10==0) std::cout << p_Cout.transpose() << " ";
+            p_Cout(0) += N_L(gen);
+            p_Cout(1) += N_L(gen);
+            p_Cout(2) += N_z(gen);
+//            if (p_Cout.norm() > 10.)
+              //          if (i%10==0) 
+//              std::cout << p_Cout.transpose() << " " << sig_z << " " << sig_L 
+//                << " " << ToDeg(theta) << std::endl;
+            cloud->push_back(pB);
+            ++n_sampled;
+          }
+        } else {
           pcl::PointXYZRGB pB;
           pB.rgb = pcIn.at(id(j,i)).rgb;
-          Eigen::Map<Eigen::Vector3f> p_Cout(&(pB.x));
-          p_Cout =  p_C;
-//          if (i%10==0) std::cout << p_Cout.transpose() << " ";
-          p_Cout(0) += N_L(gen);
-          p_Cout(1) += N_L(gen);
-          p_Cout(2) += N_z(gen);
-//          if (i%10==0) std::cout << p_Cout.transpose() << " " << sig_z << " " << sig_L << std::endl;
+          Eigen::Map<Eigen::Vector3f>(&(pB.x)) = p_C;
           cloud->push_back(pB);
         }
       }
-
   if (cloud->size() < pcIn.size()/10) return false;
-//  std::cout << " output pointcloud size is: " << pcOut.size() 
-//    << " percentage of input cloud: "
-//    << (100.*pcOut.size()/float(pcIn.size())) << std::endl;
+  std::cout << " output pointcloud size is: " << pcOut.size() 
+    << " percentage of input cloud: "
+    << (100.*pcOut.size()/float(pcIn.size()))
+    << " sampled at total of " << 100.*n_sampled/float(pcOut.size()) << "%."<< std::endl;
+
+  pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
+  sor.setInputCloud (cloud);
+  sor.setMeanK (50);
+  sor.setStddevMulThresh (1.0);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_f(new pcl::PointCloud<pcl::PointXYZRGB>);
+  sor.filter (*cloud_f);
   
   // Extract surface normals
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
-  ne.setInputCloud (cloud);
+  ne.setInputCloud (cloud_f);
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB> ());
   ne.setSearchMethod (tree);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
@@ -137,12 +157,12 @@ bool RenderPointCloudNoisy(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
   ne.compute (*cloud_normals);
 
   pcOut.clear();
-  for (uint32_t i=0; i<cloud->size(); ++i) {
+  for (uint32_t i=0; i<cloud_f->size(); ++i) {
     pcl:: PointXYZRGBNormal p;
     Eigen::Map<Eigen::Vector3f>(p.normal) = 
     Eigen::Map<Eigen::Vector3f>(cloud_normals->at(i).normal);
-    Eigen::Map<Eigen::Vector3f>(&(p.x)) = Eigen::Map<Eigen::Vector3f>(&(cloud->at(i).x));
-    p.rgb = cloud->at(i).rgb;
+    Eigen::Map<Eigen::Vector3f>(&(p.x)) = Eigen::Map<Eigen::Vector3f>(&(cloud_f->at(i).x));
+    p.rgb = cloud_f->at(i).rgb;
     pcOut.push_back(p);
   }
   return true;

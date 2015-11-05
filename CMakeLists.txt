@@ -138,7 +138,6 @@ if(NOT DRC AND OPENNI)
     vtkCommon vtkFiltering vtkRendering
     )
 
-
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
@@ -159,12 +158,11 @@ endif()
 #  opencv_highgui opencv_core
 #  )
 
-
   add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
     ./src/pinhole.cpp)
   target_link_libraries (renderPcFromPc boost_system boost_thread
-    boost_program_options
-    pcl_common  pcl_features pcl_search pcl_io pcl_visualization )
+    boost_program_options pcl_filters
+    pcl_common  pcl_features pcl_search pcl_io pcl_visualization OpenNI XnVNite)
 
   add_executable(rndTransformPc ./src/randomlyTransformPointClouds.cpp)
   target_link_libraries(rndTransformPc boost_system boost_thread
