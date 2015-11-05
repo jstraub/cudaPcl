@@ -159,11 +159,12 @@ endif()
 #  opencv_highgui opencv_core
 #  )
 
+
   add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
     ./src/pinhole.cpp)
   target_link_libraries (renderPcFromPc boost_system boost_thread
     boost_program_options
-    pcl_common pcl_io pcl_visualization )
+    pcl_common  pcl_features pcl_search pcl_io pcl_visualization )
 
   add_executable(rndTransformPc ./src/randomlyTransformPointClouds.cpp)
   target_link_libraries(rndTransformPc boost_system boost_thread
