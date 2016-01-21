@@ -146,7 +146,6 @@ if(NOT DRC AND OPENNI)
   target_link_libraries (pclBenchmark boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
 
-
   pods_install_executables(pclGrabber openniSmoothNormals
     openniSmoothNormals_file
     pclBenchmark 
