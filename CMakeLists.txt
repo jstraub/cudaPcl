@@ -26,11 +26,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Wno-deprecated")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=\"sm_35,compute_35\")
 
 set(DRC OFF)
-set(OPENNI ON)
+set(OPENNI OFF)
+
+#set(VTK_DIR /usr/bin/)
 
 find_package (Eigen3 REQUIRED)
 find_package (CUDA REQUIRED)
-find_package (VTK REQUIRED)
+#find_package (VTK REQUIRED)
 FIND_PACKAGE (Boost 1.54 REQUIRED)
 message(${EIGEN3_INCLUDE_DIR})
 message(${CUDA_INCLUDE_DIRS})
@@ -39,15 +41,16 @@ message(${CUDA_TOOLKIT_ROOT_DIR})
 message(${CUDA_LIBRARIES})
 message(${Boost_LIBRARY_DIRS})
 message("VTK ")
-message(${VTK_LIBRARY_DIRS})
-message(${VTK_INCLUDE_DIRS})
+#message(${VTK_LIBRARY_DIRS})
+#message(${VTK_INCLUDE_DIRS})
 
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
   ${CUDA_TOOLKIT_INCLUDE}
   ${Boost_INCLUDE_DIRS}
-  ${VTK_INCLUDE_DIRS}
+#  ${VTK_INCLUDE_DIRS}
+#  /usr/include/
 )
 
 link_directories(
@@ -82,6 +85,7 @@ endif()
 #  OpenNI XnVNite
 #  opencv_core opencv_highgui)
 
+if(OPENNI)
 cuda_add_library(cudaPcl SHARED
   ./cuda/cuda_pcl_helpers.cu
   ./cuda/integral.cu
@@ -98,6 +102,8 @@ target_link_libraries (cudaPcl
   pcl_io pcl_visualization OpenNI XnVNite
   vtkCommon vtkFiltering vtkRendering
   )
+  pods_install_libraries(cudaPcl)
+endif()
 
 if(NOT DRC AND OPENNI)
 
@@ -144,12 +150,6 @@ if(NOT DRC AND OPENNI)
     vtkCommon vtkFiltering vtkRendering
     )
 
-  add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
-    ./src/pinhole.cpp)
-  target_link_libraries (renderPcFromPc boost_system boost_thread
-    boost_program_options pcl_filters
-    pcl_common  pcl_features pcl_search pcl_io pcl_visualization)
-
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
     pcl_common pcl_io pcl_visualization OpenNI XnVNite)
@@ -166,8 +166,6 @@ if(NOT DRC AND OPENNI)
   pods_install_executables(pclGrabber openniSmoothNormals openniPyramid
     openniSmoothNormals_file
     pclBenchmark 
-    rndTransformPc
-    renderPcFromPc
     openniSmoothDepth)
 endif()
 #add_executable(freenect2Vis ./src/freenect2Visualizer.cpp)
@@ -176,9 +174,18 @@ endif()
 #  opencv_highgui opencv_core
 #  )
 
+  add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
+    ./src/pinhole.cpp)
+  target_link_libraries (renderPcFromPc boost_system boost_thread
+    boost_program_options pcl_filters
+    pcl_common  pcl_features pcl_search pcl_io pcl_visualization)
 
-  pods_install_libraries(cudaPcl)
-#  pods_install_executables(pclNormals)
+  add_executable(rndTransformPc ./src/randomlyTransformPointClouds.cpp)
+  target_link_libraries(rndTransformPc boost_system boost_thread
+    boost_program_options
+    pcl_common pcl_io pcl_visualization )
+
+  pods_install_executables( rndTransformPc renderPcFromPc)
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
