@@ -53,6 +53,7 @@ include_directories(
 link_directories(
   ${Boost_LIBRARY_DIRS}
   ${VTK_LIBRARY_DIRS}
+  /usr/lib/
 )
 
 if(NOT DRC)
@@ -69,6 +70,7 @@ if(NOT DRC)
 
   link_directories(
     ${PCL_LIBRARY_DIRS}
+    /usr/lib/
     )
 endif()
 

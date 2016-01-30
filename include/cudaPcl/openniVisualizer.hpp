@@ -19,7 +19,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <cudaPcl/openniGrabber.hpp>
-//#define USE_PCL_VIEWER
+#define USE_PCL_VIEWER
 
 //#include <pcl/point_cloud.h>
 //#include <pcl/impl/point_types.hpp>
@@ -163,12 +163,12 @@ void OpenniVisualizer::visualizerThread()
   while (!viewer_->wasStopped ())
   {
     viewer_->spinOnce (10);
-    cv::waitKey(10);
+    char key = cv::waitKey(10);
     // Get lock on the boolean update and check if cloud was updated
     boost::mutex::scoped_lock updateLock(updateModelMutex);
     if (update_)
     {
-      visualize_();
+      visualize_(key);
       update_ = false;
     }
   }
