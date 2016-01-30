@@ -49,7 +49,7 @@ class OpenniGrabber
     }
 
 protected:
-    void d_cb_ (const boost::shared_ptr<openni_wrapper::DepthImage>& d)
+    virtual void d_cb_ (const boost::shared_ptr<openni_wrapper::DepthImage>& d)
     {
 //      cout<<"depth "<<d->getFrameID()<< " @"<<d->getTimeStamp()
 //        << " size: "<<d->getWidth()<<"x"<<d->getHeight()

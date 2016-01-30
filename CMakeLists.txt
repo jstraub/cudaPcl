@@ -101,6 +101,17 @@ target_link_libraries (cudaPcl
 
 if(NOT DRC AND OPENNI)
 
+  cuda_add_executable(openniPyramid ./src/openniPyramid.cpp
+    )
+  target_link_libraries (openniPyramid
+    cudaPcl
+    boost_system boost_thread pcl_common
+    boost_program_options
+    opencv_core opencv_highgui opencv_contrib  opencv_imgproc
+    pcl_io pcl_visualization OpenNI XnVNite
+    vtkCommon vtkFiltering vtkRendering
+    )
+
   cuda_add_executable(openniSmoothDepth ./src/openniSmoothDepth.cpp
     )
   target_link_libraries (openniSmoothDepth 
@@ -152,7 +163,7 @@ if(NOT DRC AND OPENNI)
     boost_program_options
     pcl_common pcl_io pcl_visualization)
 
-  pods_install_executables(pclGrabber openniSmoothNormals
+  pods_install_executables(pclGrabber openniSmoothNormals openniPyramid
     openniSmoothNormals_file
     pclBenchmark 
     rndTransformPc
@@ -187,6 +198,7 @@ pods_install_headers(
   ./include/cudaPcl/root_includes.hpp
   ./include/cudaPcl/dirSeg.hpp
   ./include/cudaPcl/pinhole.h
+  ./include/cudaPcl/openniPyramid.hpp
   DESTINATION cudaPcl)
 
 #install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
