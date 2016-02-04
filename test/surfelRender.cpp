@@ -10,9 +10,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/contrib/contrib.hpp>
 
-#include <anytReconstruct/surfel.hpp>
+#include <cudaPcl/surfel.hpp>
 
-using namespace anyt;
+using namespace cudaPcl;
 
 cv::Mat colorizeDepth(const cv::Mat& dMap, float min, float max)
 {
@@ -25,8 +25,8 @@ cv::Mat colorizeDepth(const cv::Mat& dMap, float min, float max)
 
 int main(int argc, char** argv) {
   
-  Surfel s0(0,0,1, 1,1,1,0.2);
-  Surfel s1(0.5,0.5,1, 4,4,4,0.5);
+  Surfel s0(0,0,1, 1,1,1,0.02);
+  Surfel s1(0.5,0.5,1, 4,4,4,0.05);
   s0.makeValid();
   s1.makeValid();
 
@@ -34,24 +34,26 @@ int main(int argc, char** argv) {
   ss_.push_back(s0);
   ss_.push_back(s1);
 
-  Eigen::Map<Eigen::Matrix<float,7,1>> s0raw(&(ss_[0].x));
+  Eigen::Map<Eigen::Matrix<float,7,1> > s0raw(&(ss_[0].x));
   std::cout << s0raw.transpose() << std::endl;
 
-  Eigen::Map<Eigen::Matrix<float,7,1>> s1raw(&(ss_[1].x));
+  Eigen::Map<Eigen::Matrix<float,7,1> > s1raw(&(ss_[1].x));
   std::cout << s1raw.transpose() << std::endl;
 
-  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7>> xyz_(&(ss_[0].x), 2,3);
+  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7> > xyz_(&(ss_[0].x), 2,3);
   std::cout << xyz_ << std::endl;
 
-  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7>> n(&(ss_[0].nx), 2,3);
+  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7> > n(&(ss_[0].nx), 2,3);
   std::cout << n << std::endl;
 
-  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7>> rSq(&(ss_[0].rSq), 2,1);
+  Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>, 0, Eigen::OuterStride<7> > rSq(&(ss_[0].rSq), 2,1);
   std::cout << rSq << std::endl;
 
   SurfelStore ss;
   ss.AddSurfel(s0);
   ss.AddSurfel(s1);
+  ss.AddSurfel(Surfel(0.8,0.,2., 0,0,1,0.1));
+  ss.AddSurfel(Surfel(0.0,0.,3., 0,0,1,0.2));
   std::cout << ss.GetXYZs() << std::endl;
   std::cout << ss.GetNs() << std::endl;
   std::cout << ss.GetRSqs() << std::endl;

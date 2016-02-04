@@ -27,11 +27,13 @@ __global__ void surfel_render(T* s, int32_t N, T f, int32_t w, int32_t h, T *d)
 
   if(idx<w && idy<h)
   {
-    T[3] ray;
+    T ray[3];
     ray[0] = T(idx)-(w-1.)*0.5;
     ray[1] = T(idy)-(h-1.)*0.5;
     ray[2] = f;
-    T[3] pt;
+    T pt[3];
+    d[id] = 0.;
+    T dMin = 1e20;
     for (int32_t i=0; i<N; ++i) {
       // TODO can precompute this.
       T psDotRayS = s[i*COL_DIM+COL_P_X]*s[i*COL_DIM+COL_N_X] + s[i*COL_DIM+COL_P_Y]*s[i*COL_DIM+COL_N_Y] + s[i*COL_DIM+COL_P_Z]*s[i*COL_DIM+COL_N_Z];
@@ -43,11 +45,12 @@ __global__ void surfel_render(T* s, int32_t N, T f, int32_t w, int32_t h, T *d)
       T rSq = (pt[0]-s[i*COL_DIM+COL_P_X])*(pt[0]-s[i*COL_DIM+COL_P_X]) +
         (pt[1]-s[i*COL_DIM+COL_P_Y])*(pt[1]-s[i*COL_DIM+COL_P_Y]) +
         (pt[2]-s[i*COL_DIM+COL_P_Z])*(pt[2]-s[i*COL_DIM+COL_P_Z]);
-      if (rSq < s[i*COL_DIM+COL_RSq]) {
+      if (rSq < s[i*COL_DIM+COL_RSq] && dMin > pt[2]) {
         // ray hit the surfel 
-        d[idx,idy] = pt[2];
+        dMin = pt[2];
       }
     }
+    d[id] = dMin > 100.? 0. : dMin;
   }
 }
 
@@ -56,7 +59,7 @@ void surfelRenderGPU(float* s, int32_t N, float f, int32_t w, int32_t h, float *
   dim3 threads(16,16,1);
   dim3 blocks(w,h,1);
   printf("surfelRenderGPU %d x %d",w,h);
-  surfel_render<float><<<blocks, threads>>>();
+  surfel_render<float><<<blocks, threads>>>(s,N,f,w,h,d);
   getLastCudaError("surfelRenderGPU() execution failed\n");
 }
 void surfelRenderGPU(double* s, int32_t N, double f, int32_t w, int32_t h, double *d)
@@ -64,7 +67,7 @@ void surfelRenderGPU(double* s, int32_t N, double f, int32_t w, int32_t h, doubl
   dim3 threads(16,16,1);
   dim3 blocks(w,h,1);
   printf("surfelRenderGPU %d x %d",w,h);
-  surfel_render<double><<<blocks, threads>>>(d,x,y,z,invF,w,h,xyz);
+  surfel_render<double><<<blocks, threads>>>(s,N,f,w,h,d);
   getLastCudaError("surfelRenderGPU() execution failed\n");
 }
 

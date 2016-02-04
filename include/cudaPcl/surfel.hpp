@@ -9,13 +9,15 @@
 
 #include <jsCore/gpuMatrix.hpp>
 
-namespace anyt {
-
 void surfelRenderGPU(float* s, int32_t N, float f, int32_t w, int32_t h, float *d);
 void surfelRenderGPU(double* s, int32_t N, double f, int32_t w, int32_t h, double *d);
 
+namespace cudaPcl {
 
-typedef Eigen::Map<Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>,0,Eigen::OuterStride<7>> SurfelMap;
+
+typedef Eigen::Map<Eigen::Matrix<float,
+        Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>,
+        0,Eigen::OuterStride<7> > SurfelMap;
 
 struct Surfel {
   float x;

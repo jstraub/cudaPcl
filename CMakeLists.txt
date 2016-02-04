@@ -26,7 +26,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Wno-deprecated")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=\"sm_35,compute_35\")
 
 set(DRC OFF)
-set(OPENNI OFF)
+set(OPENNI ON)
 
 #set(VTK_DIR /usr/bin/)
 
@@ -189,7 +189,7 @@ endif()
   cuda_add_executable(testSurfelRender 
     ./test/surfelRender.cpp)
   target_link_libraries(testSurfelRender
-    jsCore cudaPcl anytReconstruct
+    jsCore cudaPcl 
     ${OpenCV_LIBS}
     )
 
