@@ -91,6 +91,7 @@ cuda_add_library(cudaPcl SHARED
   ./cuda/integral.cu
   ./cuda/guidedFilter.cu
   ./cuda/convolutionSeparable.cu
+  ./cuda/surfelRender.cu
 #  ./src/pcl_helpers.cpp
 #  ./cuda/bilateralFilter.cu
 #  ./cuda/optimizationSO3.cu
@@ -185,7 +186,15 @@ endif()
     boost_program_options
     pcl_common pcl_io pcl_visualization )
 
-  pods_install_executables( rndTransformPc renderPcFromPc)
+  cuda_add_executable(testSurfelRender 
+    ./test/surfelRender.cpp)
+  target_link_libraries(testSurfelRender
+    jsCore cudaPcl anytReconstruct
+    ${OpenCV_LIBS}
+    )
+
+  pods_install_executables( rndTransformPc renderPcFromPc
+    testSurfelRender)
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
@@ -206,6 +215,7 @@ pods_install_headers(
   ./include/cudaPcl/dirSeg.hpp
   ./include/cudaPcl/pinhole.h
   ./include/cudaPcl/openniPyramid.hpp
+  ./include/cudaPcl/surfel.hpp
   DESTINATION cudaPcl)
 
 #install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
