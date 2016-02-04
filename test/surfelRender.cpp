@@ -65,6 +65,28 @@ int main(int argc, char** argv) {
   cv::Mat d = ss.Render(wRc, wtc, 540, 640, 480);
   cv::Mat dCol = colorizeDepth(d, 0.3,4.0);
   cv::imshow("d", dCol);
+
+
+  for(float dx=0.1; dx>0.001; dx/=10.) {
+    float dy = dx;
+    SurfelStore ssRnd;
+    for(float x=-0.8; x<0.8; x+=dx) 
+      for(float y=-0.8; y<0.8; y+=dy) {
+        ssRnd.AddSurfel(Surfel(x,y,1., 0.,0.,1., 0.01*sqrt(2)*1./540.));
+      }
+    std::cout  << "--- " 
+      << "render with dx=" 
+      << dx 
+      << " #surfels " << ssRnd.Size()
+      << std::endl;
+    for (uint32_t i=0; i<3; ++i) {
+      cv::Mat d = ssRnd.Render(wRc, wtc, 540, 640, 480);
+    }
+    cv::Mat d = ssRnd.Render(wRc, wtc, 540, 640, 480);
+    cv::Mat dCol = colorizeDepth(d, 0.3,4.0);
+    cv::imshow("dRnd", dCol);
+    cv::waitKey(0);
+  }
   cv::waitKey(0);
 
 };
