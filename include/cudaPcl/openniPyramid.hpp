@@ -39,6 +39,10 @@ class OpenniPyramid : public OpenniGrabber
 
   virtual void depth_cb(const uint16_t * depth, uint32_t w, uint32_t h);
 
+  cv::Mat getDLvl(int32_t lvl);
+  cv::Mat getGrayLvl(int32_t lvl);
+
+  static cv::Mat getILvl(cv::Mat& pyr, uint32_t w, int32_t lvl);
   static cv::Mat createPyramid(cv::Mat& in, int32_t L, int32_t mode,
       std::vector<cv::Mat>& pyr);
  protected:
@@ -62,7 +66,7 @@ cv::Mat OpenniPyramid::createPyramid(cv::Mat& in, int32_t L, int32_t mode,
   const uint32_t w = in.cols;
   const uint32_t h = in.rows;
   const uint32_t W = static_cast<uint32_t>(floor(w * 2.*(1.-pow(2.,-L))));
-  std::cout << w<< "x"<<h << " L=" << L << " W " << W << std::endl;
+//  std::cout << w<< "x"<<h << " L=" << L << " W " << W << std::endl;
   cv::Mat I = cv::Mat::zeros(h, W, in.type());
   uint32_t w0l = 0;
   uint32_t hl = h;
@@ -74,7 +78,7 @@ cv::Mat OpenniPyramid::createPyramid(cv::Mat& in, int32_t L, int32_t mode,
     w0l += wl;
     wl /= 2;
     hl /= 2;
-    std::cout << w0l << ", " << wl << "x" << hl << std::endl;
+//    std::cout << w0l << ", " << wl << "x" << hl << std::endl;
     cv::Mat roiPrev(I,cv::Range(0,hl*2),cv::Range(w0l-wl*2,w0l));
     cv::Mat roiNext(I,cv::Range(0,hl),cv::Range(w0l,w0l+wl));
     if (mode == MODE_GAUSS) {
@@ -89,19 +93,32 @@ cv::Mat OpenniPyramid::createPyramid(cv::Mat& in, int32_t L, int32_t mode,
   return I;
 }
 
+cv::Mat OpenniPyramid::getILvl(cv::Mat& pyr, uint32_t w, int32_t lvl) {
+  uint32_t h = pyr.rows;
+  uint32_t w0l = static_cast<uint32_t>(floor(w * 2.*(1.-pow(2.,-lvl))));
+  uint32_t hl = static_cast<uint32_t>(floor(h*pow(2.,-lvl)));
+  uint32_t wl = static_cast<uint32_t>(floor(w*pow(2.,-lvl)));
+  return cv::Mat(pyr,cv::Range(0,hl),cv::Range(w0l,w0l+wl));
+}
+
+cv::Mat OpenniPyramid::getDLvl(int32_t lvl) {
+  return getILvl(d_pyr_, w_, lvl);
+}
+cv::Mat OpenniPyramid::getGrayLvl(int32_t lvl) {
+  return getILvl(gray_pyr_, w_, lvl);
+}
+
 void OpenniPyramid::d_cb_ (const boost::shared_ptr<openni_wrapper::DepthImage>& d)
 {
   this->w_=d->getWidth();
   this->h_=d->getHeight();
   const uint16_t* data = d->getDepthMetaData().Data();
-
-  jsc::Timer t0;
+//  jsc::Timer t0;
   cv::Mat dU16 = cv::Mat(this->h_,this->w_,CV_16U,const_cast<uint16_t*>(data));
   dU16.convertTo(d_, CV_32FC1, 0.001);
-  t0.toctic("convert to float");
+//  t0.toctic("convert to float");
   d_pyr_ = createPyramid(d_, L_, mode_, d_pyr_lvls_);
-  t0.toctic("pyramid creation");
-
+//  t0.toctic("pyramid creation");
   depth_cb(data,w_,h_);
 };
 
@@ -112,13 +129,11 @@ void OpenniPyramid::rgb_cb_ (const boost::shared_ptr<openni_wrapper::Image>& rgb
   if(this->rgb_.cols < w)
     this->rgb_ = cv::Mat(h,w,CV_8UC3);
   rgb->fillRGB(w,h,this->rgb_.data);
-
-  jsc::Timer t0;
+//  jsc::Timer t0;
   cv::cvtColor(this->rgb_, gray_, CV_BGR2GRAY);
-  t0.toctic("convert to gray");
+//  t0.toctic("convert to gray");
   gray_pyr_ = createPyramid(gray_, L_, mode_, gray_pyr_lvls_);
-  t0.toctic("pyramid creation");
-
+//  t0.toctic("pyramid creation");
   rgb_cb(this->rgb_.data,w,h);
 }
 
