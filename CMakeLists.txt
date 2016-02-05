@@ -100,7 +100,7 @@ cuda_add_library(cudaPcl SHARED
 target_link_libraries (cudaPcl
   boost_system boost_thread pcl_common
   opencv_core opencv_highgui opencv_contrib opencv_imgproc
-  pcl_io pcl_visualization OpenNI XnVNite
+  pcl_io pcl_visualization OpenNI #XnVNite
   vtkCommon vtkFiltering vtkRendering
   )
   pods_install_libraries(cudaPcl)
@@ -115,7 +115,7 @@ if(NOT DRC AND OPENNI)
     boost_system boost_thread pcl_common
     boost_program_options
     opencv_core opencv_highgui opencv_contrib  opencv_imgproc
-    pcl_io pcl_visualization OpenNI XnVNite
+    pcl_io pcl_visualization OpenNI #XnVNite
     vtkCommon vtkFiltering vtkRendering
     )
 
@@ -126,7 +126,7 @@ if(NOT DRC AND OPENNI)
     boost_system boost_thread pcl_common
     boost_program_options
     opencv_core opencv_highgui opencv_contrib  opencv_imgproc
-    pcl_io pcl_visualization OpenNI XnVNite
+    pcl_io pcl_visualization OpenNI #XnVNite
     vtkCommon vtkFiltering vtkRendering
     )
 
@@ -136,7 +136,7 @@ if(NOT DRC AND OPENNI)
     cudaPcl
     boost_system boost_thread pcl_common boost_program_options
     opencv_core opencv_highgui opencv_contrib opencv_imgproc
-    pcl_io pcl_visualization OpenNI XnVNite
+    pcl_io pcl_visualization OpenNI #XnVNite
     vtkCommon vtkFiltering vtkRendering
     )
 
@@ -147,17 +147,19 @@ if(NOT DRC AND OPENNI)
     cudaPcl
     boost_system boost_thread pcl_common boost_program_options
     opencv_core opencv_highgui opencv_contrib opencv_imgproc
-    pcl_io pcl_visualization OpenNI XnVNite
+    pcl_io pcl_visualization OpenNI #XnVNite
     vtkCommon vtkFiltering vtkRendering
     )
 
   add_executable(pclGrabber ./src/pclGrabber.cpp)
   target_link_libraries (pclGrabber boost_system boost_thread
-    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+    pcl_common pcl_io pcl_visualization OpenNI #XnVNite
+    )
 
   add_executable(pclBenchmark ./src/pclBenchmark.cpp)
   target_link_libraries (pclBenchmark boost_system boost_thread
-    pcl_common pcl_io pcl_visualization OpenNI XnVNite)
+    pcl_common pcl_io pcl_visualization OpenNI #XnVNite
+    )
 
   add_executable(rndTransformPc ./src/randomlyTransformPointClouds.cpp)
   target_link_libraries(rndTransformPc boost_system boost_thread
