@@ -54,7 +54,7 @@ class DepthGuidedFilterGpu
       d_dSum(h_+1,w_+1), d_dSumT(h_+1,w_+1), d_dSqSum(h_+1,w_+1),
       d_haveData_(h_,w_),d_haveData2(h_,w_), tLog("t.log",1), aInt(h_+1,w_+1,CV_64F),
       bInt(h_+1,w_+1,CV_64F), Ns(h_+1,w_+1,CV_32S), dSum(h_+1,w_+1,CV_64F),
-      dSqSum(h_+1,w_+1,CV_64F), haveData(h_, w_, CV_8U), haveData2(h_, w_, CV_8U),
+      dSqSum(h_+1,w_+1,CV_64F), haveData_(h_, w_, CV_8U), haveData2(h_, w_, CV_8U),
       a(h_, w_, CV_64F),
       b(h_, w_, CV_64F), dSmooth(h_, w_, CV_64F), dFlt(h_,w_,CV_64F),
       d_depthSmooth(h_,w_), d_a(h_,w_), d_b(h_,w_), d_Ns(h_+1,w_+1),
@@ -117,7 +117,7 @@ class DepthGuidedFilterGpu
   cv::Mat Ns;
   cv::Mat dSum; 
   cv::Mat dSqSum;
-  cv::Mat haveData;
+  cv::Mat haveData_;
   cv::Mat haveData2;
   cv::Mat a;
   cv::Mat b;
@@ -144,15 +144,15 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   d_depthU16.set((uint16_t*)depth.data,h_,w_);
   depth2floatGPU(d_depthU16.data(),d_depth.data(),
       d_haveData_.data(),w_,h_,-1);
-  d_haveData_.get((uint8_t*)haveData.data,h_,w_);   
+  d_haveData_.get((uint8_t*)haveData_.data,h_,w_);   
   d_depth.getAsync((double*)dFlt.data,h_,w_,stream1); // copy the double image async sinze it takes longer
 
   tLog.toctic(0,1);
-  cv::integral(haveData,Ns,CV_32S); 
+  cv::integral(haveData_,Ns,CV_32S); 
   d_Ns.setAsync((int32_t*)Ns.data,h_+1,w_+1,stream2);
 
   cudaStreamSynchronize(stream1);  // wait for stream 1 to finish
-  cv::integral(dFlt,dSum,dSqSum,CV_64F); // compute this while haveData is still copied
+  cv::integral(dFlt,dSum,dSqSum,CV_64F); // compute this while haveData_ is still copied
   d_dSum.set((double*)dSum.data,h_+1,w_+1); // start copying those already while we compute the other integral
   d_dSqSum.set((double*)dSqSum.data,h_+1,w_+1);
 
@@ -164,13 +164,13 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   guidedFilter_ab_gpu(d_haveData_.data(),
       d_haveData2.data(),d_a.data(),d_b.data(),d_Ns.data(),
       d_dSum.data(), d_dSqSum.data(),eps_,B_,w_,h_);
-  //    d_haveData2.get((uint8_t*)haveData.data,h_,w_); // get the valid data after
-  //    cv::integral(haveData,Ns,CV_32S); // TODO hide transfer
+  //    d_haveData2.get((uint8_t*)haveData_.data,h_,w_); // get the valid data after
+  //    cv::integral(haveData_,Ns,CV_32S); // TODO hide transfer
 
   d_a.get((double*)a.data,h_,w_); // important to not getAsync since itll wait till the guided filter is done
   d_b.getAsync((double*)b.data,h_,w_,stream1); // get while computing integral image on a
 
-//  cv::imshow("haveData2",haveData*255); 
+//  cv::imshow("haveData2",haveData_*255); 
 //
 // update Ns with new counts TODO: update streams
   d_haveData2.get((uint8_t*)haveData2.data,h_,w_);   
