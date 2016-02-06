@@ -113,15 +113,17 @@ void PcSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
 {
   w_ = w; h_ = h;
   tLog_.tic(-1); // reset all timers
-  if(!depthFilter_ && filterDepth_)
-  {
-    depthFilter_ = new cudaPcl::DepthGuidedFilterGpu<float>(w_,h_,
-        cfgNormals_.eps,cfgNormals_.B);
+  if (filterDepth_) {
+    if(!depthFilter_ )
+    {
+      depthFilter_ = new cudaPcl::DepthGuidedFilterGpu<float>(w_,h_,
+          cfgNormals_.eps,cfgNormals_.B);
+    }
+    cout<<" -- guided filter for depth image "<<w_<<" "<<h_<<endl;
+    cv::Mat dMap(h_,w_,CV_16U,const_cast<uint16_t*>(depth));
+    cout<<dMap.rows<<" "<<dMap.cols<<endl;
+    depthFilter_->filter(dMap);
   }
-  cout<<" -- guided filter for depth image "<<w_<<" "<<h_<<endl;
-  cv::Mat dMap(h_,w_,CV_16U,const_cast<uint16_t*>(depth));
-  cout<<dMap.rows<<" "<<dMap.cols<<endl;
-  depthFilter_->filter(dMap);
   tLog_.toctic(0,1);
   compute_();
 };
@@ -133,6 +135,8 @@ void PcSeg::compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc)
   w_ = pc->width; h_ = pc->height;
   tLog_.tic(-1); // reset all timers
   tLog_.toctic(0,1);
+  std::cerr << "NOT implemented yet" << std::endl;
+  exit(1);
   compute_();
 };
 

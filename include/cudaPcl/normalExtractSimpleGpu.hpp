@@ -382,7 +382,7 @@ void NormalExtractSimpleGpu<T>::compressNormals(uint32_t w, uint32_t h)
     if (nComp_ > 0)
     {
       d_normalsComp_.resize(nComp_,3);
-      // just shuffle the first 640 entries -> definitely sufficient to ge random init for the algfoerithms
+      // just shuffle the first 640 entries -> to get random init for the algorithms
       std::random_shuffle(indMap_.begin(), indMap_.begin() + std::min(640,nComp_));
       jsc::GpuMatrix<uint32_t> d_indMap_(indMap_); // copy to GPU
       copyShuffleGPU(d_nImg_.data(), d_normalsComp_.data(), d_indMap_.data(), nComp_, 3);

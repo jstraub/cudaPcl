@@ -92,6 +92,7 @@ class DepthGuidedFilterGpu
 
   T* getDepthDevicePtr(){ return d_depthSmooth.data();};
   uint8_t * d_haveData(){ return d_haveData2.data();};
+  cv::Mat haveData() { return haveData2;};
 
   protected:
   uint32_t w_,h_;
