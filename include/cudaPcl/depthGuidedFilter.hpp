@@ -170,7 +170,7 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   d_a.get((double*)a.data,h_,w_); // important to not getAsync since itll wait till the guided filter is done
   d_b.getAsync((double*)b.data,h_,w_,stream1); // get while computing integral image on a
 
-//  cv::imshow("haveData2",haveData*255); 
+//  cv::imshow("haveData2",haveData_*255); 
 //
 // update Ns with new counts TODO: update streams
   d_haveData2.get((uint8_t*)haveData2.data,h_,w_);   
