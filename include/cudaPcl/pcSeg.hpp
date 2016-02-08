@@ -18,10 +18,17 @@
 
 namespace cudaPcl{
 
+struct CfgPcSeg {
+  float f;
+  float eps;
+  uint32_t B;
+  bool filterDepth;
+};
+
 class PcSeg
 {
   public:
-    PcSeg(string pathOut, bool filterDepth);
+    PcSeg(string pathOut, const CfgPcSeg& cfg);
     virtual ~PcSeg();
 
     /*
@@ -55,9 +62,10 @@ class PcSeg
 protected:
     const static uint32_t K_MAX = 10;
 
-    bool filterDepth_;
     bool haveLabels_;
     jsc::TimerLog tLog_;
+
+    CfgPcSeg cfg_;
 
     uint32_t w_, h_;
     uint32_t K_;
@@ -65,6 +73,8 @@ protected:
 
     boost::shared_ptr<jsc::ClDataGpuf> cld_; // clustered data
     cudaPcl::DepthGuidedFilterGpu<float> *depthFilter_;
+
+    cv::Mat xyz_;
 
     Matrix<uint8_t,Dynamic,Dynamic> dirCols_;
     void fillJET();
@@ -84,9 +94,10 @@ protected:
 };
 
 // ------------------- impl --------------------------------------
-PcSeg::PcSeg(string pathOut, bool filterDepth)
-  : filterDepth_(filterDepth), haveLabels_(false)
+PcSeg::PcSeg(string pathOut, const CfgPcSeg& cfg)
+  : haveLabels_(false),
   tLog_(pathOut+string("./timer.log"),3,10,"TimerLog"),
+  cfg_(cfg),
   depthFilter_(NULL)
 {
   fillJET();
@@ -112,17 +123,36 @@ void PcSeg::scaleDirColors(uint32_t K)
 void PcSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
 {
   w_ = w; h_ = h;
+  cv::Mat dMap(h_,w_,CV_16U,const_cast<uint16_t*>(depth));
+  xyz_ = cv::Mat(h_, w_, CV_32FC3);
   tLog_.tic(-1); // reset all timers
-  if (filterDepth_) {
+  if (cfg_.filterDepth) {
     if(!depthFilter_ )
     {
       depthFilter_ = new cudaPcl::DepthGuidedFilterGpu<float>(w_,h_,
-          cfgNormals_.eps,cfgNormals_.B);
+          cfg_.eps, cfg_.B);
     }
     cout<<" -- guided filter for depth image "<<w_<<" "<<h_<<endl;
-    cv::Mat dMap(h_,w_,CV_16U,const_cast<uint16_t*>(depth));
     cout<<dMap.rows<<" "<<dMap.cols<<endl;
     depthFilter_->filter(dMap);
+    cv::Mat dFloat = depthFilter_->getOutput();
+    for (uint32_t i=0; i<h_; ++i)
+      for (uint32_t j=0; j<w_; ++j) {
+        float d = dFloat.at<float>(i,j);
+        xyz_.at<cv::Vec3f>(i,j)[0] = (j-(w_-1)*0.5) * d / cfg_.f;
+        xyz_.at<cv::Vec3f>(i,j)[1] = (i-(h_-1)*0.5) * d / cfg_.f;
+        xyz_.at<cv::Vec3f>(i,j)[2] = d;
+      }
+  } else {
+    std::cout << xyz_.rows << "x" << xyz_.cols << std::endl;
+    std::cout << h_ << "x" << w_ << std::endl;
+    for (uint32_t i=0; i<h_; ++i)
+      for (uint32_t j=0; j<w_; ++j) {
+        float d = static_cast<float>(dMap.at<uint16_t>(i,j))*0.001;
+        xyz_.at<cv::Vec3f>(i,j)[0] = (j-(w_-1)*0.5) * d / cfg_.f;
+        xyz_.at<cv::Vec3f>(i,j)[1] = (i-(h_-1)*0.5) * d / cfg_.f;
+        xyz_.at<cv::Vec3f>(i,j)[2] = d;
+      }
   }
   tLog_.toctic(0,1);
   compute_();
@@ -133,6 +163,9 @@ void PcSeg::compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc)
   // pcl::Normal is a float[4] array per point. the 4th entry is the
   // curvature
   w_ = pc->width; h_ = pc->height;
+  // TODO: this is not exactly right because the points in the pc are
+  // all 4 floats.
+//  xyz = cv::Mat(&((*pc)[0].x), h_, w_);
   tLog_.tic(-1); // reset all timers
   tLog_.toctic(0,1);
   std::cerr << "NOT implemented yet" << std::endl;
@@ -204,8 +237,8 @@ cv::Mat PcSeg::overlaySeg(cv::Mat img, bool showDirs, bool scaleColors)
 //  "<<rgb.rows<<endl;
   cv::Mat Iout;
   cv::addWeighted(rgb , 0.7, zI, 0.3, 0.0, Iout);
-  if(showDirs)
-    projectDirections(Iout,centroids(),cfgNormals_.f_d,w_,h_,dirCols_);
+//  if(showDirs)
+//    projectDirections(Iout,centroids(),cfgNormals_.f_d,w_,h_,dirCols_);
   return Iout;
 };
 

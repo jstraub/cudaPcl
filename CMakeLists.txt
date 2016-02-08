@@ -215,6 +215,7 @@ pods_install_headers(
   ./include/cudaPcl/pcl_helpers.hpp
   ./include/cudaPcl/root_includes.hpp
   ./include/cudaPcl/dirSeg.hpp
+  ./include/cudaPcl/pcSeg.hpp
   ./include/cudaPcl/pinhole.h
   ./include/cudaPcl/openniPyramid.hpp
   ./include/cudaPcl/surfel.hpp
