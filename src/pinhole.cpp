@@ -9,6 +9,11 @@ Pinhole::Pinhole(const Eigen::Matrix3f& R_C_W, const Eigen::Vector3f&
   : R_C_W_(R_C_W), t_C_W_(t_C_W), f_(f), w_(w), h_(h) {
 }
 
+Pinhole::Pinhole(float f, uint32_t w, uint32_t h)
+  : R_C_W_(Eigen::Matrix3f::Identity()),
+  t_C_W_(Eigen::Vector3f::Zero()), f_(f), w_(w), h_(h) {
+}
+
 Eigen::Vector2f Pinhole::ProjectToFocalPlane(const Eigen::Vector3f& p_W,
     Eigen::Vector3f* p_C) const {
   Eigen::Vector3f p_C_ = R_C_W_ * p_W + t_C_W_;
@@ -41,6 +46,10 @@ bool Pinhole::IsInImage(const Eigen::Vector3f& p_W,
     return false;
 }
 
+Eigen::Vector3f Pinhole::UnprojectToCameraCosy(uint32_t i, float d) const {
+  return UnprojectToCameraCosy(i%w_, i/w_, d);
+}
+
 Eigen::Vector3f Pinhole::UnprojectToCameraCosy(uint32_t u, uint32_t v,
     float d) const {
   Eigen::Vector3f p_C;
@@ -50,8 +59,13 @@ Eigen::Vector3f Pinhole::UnprojectToCameraCosy(uint32_t u, uint32_t v,
   return p_C;
 }
 
+Eigen::Vector3f Pinhole::UnprojectToWorld(uint32_t i, float d) const {
+  return UnprojectToWorld(i%w_, i/w_, d);
+}
+
 Eigen::Vector3f Pinhole::UnprojectToWorld(uint32_t u, uint32_t v,
     float d) const {
   return R_C_W_.transpose() * (UnprojectToCameraCosy(u,v,d) - t_C_W_);
 }
+
 }

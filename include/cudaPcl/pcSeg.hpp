@@ -181,6 +181,7 @@ const VectorXu& PcSeg::labels()
     getLabels_();
     haveLabels_ = true;
     cout<<"PcSeg::labels() got "<<z_.size()<<" labels"<<endl;
+    std::cout << "K=" << K_ << std::endl;
   }
   return z_;
 };
@@ -192,11 +193,11 @@ cv::Mat PcSeg::labelsImg(bool scaleColors)
   if(scaleColors) 
     scaleDirColors(K_);
   else
-    scaleDirColors(K_MAX);
-
+    scaleDirColors(max(K_, K_MAX) );
+  
   cv::Mat zIrgb(h_,w_,CV_8UC3);
   for(uint32_t i=0; i<w_; i+=1)
-    for(uint32_t j=0; j<h_; j+=1)
+    for(uint32_t j=0; j<h_; j+=1) {
       if(z_(w_*j +i) < K_)
       {
         uint32_t idz = z_(w_*j +i);
@@ -209,6 +210,8 @@ cv::Mat PcSeg::labelsImg(bool scaleColors)
         zIrgb.at<cv::Vec3b>(j,i)[1] = 255;
         zIrgb.at<cv::Vec3b>(j,i)[2] = 255;
       }
+    }
+  std::cout << std::endl;
   return zIrgb;
 };
 

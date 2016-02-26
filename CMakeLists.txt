@@ -92,6 +92,7 @@ cuda_add_library(cudaPcl SHARED
   ./cuda/guidedFilter.cu
   ./cuda/convolutionSeparable.cu
   ./cuda/surfelRender.cu
+  ./src/pinhole.cpp
 #  ./src/pcl_helpers.cpp
 #  ./cuda/bilateralFilter.cu
 #  ./cuda/optimizationSO3.cu
