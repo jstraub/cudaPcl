@@ -206,8 +206,10 @@ pods_install_headers(
   ./include/cudaPcl/cudaSphereHelpers.h
   ./include/cudaPcl/cv_helpers.hpp
   ./include/cudaPcl/depthGuidedFilter.hpp
+  ./include/cudaPcl/depthGuidedFilter_impl.hpp
   ./include/cudaPcl/freenect2Grabber.hpp
   ./include/cudaPcl/normalExtractSimpleGpu.hpp
+  ./include/cudaPcl/normalExtractSimpleGpu_impl.hpp
   ./include/cudaPcl/openniGrabber.hpp
   ./include/cudaPcl/openniSmoothDepth.hpp
   ./include/cudaPcl/openniSmoothDepthGpu.hpp
