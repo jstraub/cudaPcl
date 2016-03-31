@@ -23,6 +23,7 @@
 #include <cudaPcl/root_includes.hpp>
 #include <cudaPcl/convolutionSeparable_common_small.h>
 #include <cudaPcl/cuda_pc_helpers.h>
+#include <cudaPcl/openniVisualizer.hpp>
 
 using namespace Eigen;
 using std::cout;
@@ -85,7 +86,8 @@ public:
   void compute(const uint16_t* data, uint32_t w, uint32_t h);
   void compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc, T radius=0.03);
 
-  void computeGpu(T* d_depth, uint32_t w, uint32_t h);
+  void computeGpu(uint16_t* d_depth);
+  void computeGpu(T* d_depth);
   void computeAreaWeights();
   void compressNormals( uint32_t w, uint32_t h);
 //  void compressNormalsCpu(float* n, uint32_t w, uint32_t h);
@@ -124,7 +126,7 @@ public:
 protected:
 
     // sets up the memory on the GPU device
-    void prepareCUDA(uint32_t w,uint32_t h);
+    void prepareCUDA();
     // computes derivatives of d_x, d_y, d_z on GPU
     void computeDerivatives(uint32_t w,uint32_t h);
     // smoothes the derivatives (iterations) times
@@ -133,7 +135,10 @@ protected:
     void depth2smoothXYZ(T invF, uint32_t w,uint32_t h);
 
     T invF_;
+    // Width and height of in and output
     uint32_t w_,h_;
+    // Width and height for internal processing pruposes
+    uint32_t wProc_,hProc_;
     bool cudaReady_, nCachedPc_, nCachedImg_, pcComputed_, nCachedComp_;
     bool compress_;
     jsc::GpuMatrix<T> d_z;
@@ -159,7 +164,6 @@ protected:
 
     T *h_nPcl;
     T *h_xyz;
-    T *h_dbg;
 
     uint16_t* d_depth;
     T h_sobel_dif[KERNEL_LENGTH];
@@ -177,17 +181,18 @@ protected:
 // ------------------------------- impl ----------------------------------
 template<typename T>
 NormalExtractSimpleGpu<T>::NormalExtractSimpleGpu(T f_depth, uint32_t w, uint32_t h, bool compress)
-  : invF_(1./f_depth), w_(w), h_(h), cudaReady_(false), nCachedPc_(false),
+  : invF_(1./f_depth), w_(w), h_(h), wProc_(w+w%16), hProc_(h+h%64), cudaReady_(false), nCachedPc_(false),
    nCachedImg_(false), pcComputed_(false), nCachedComp_(false),
    compress_(compress), 
    d_z(h,w),
    d_zu(h,w),
    d_nImg_(h*w,3),
-   d_haveData_(h,w), d_normalsComp_(h*w,3), d_compInd_(w*h,1), h_dbg(NULL)
+   d_haveData_(h,w), d_normalsComp_(h*w,3), d_compInd_(w*h,1)
 {
-  cout<<"calling prepareCUDA"<<endl;
+  cout<<"calling prepareCUDA internal processing size " 
+    << wProc_ << "x" << hProc_ <<endl;
   cout<<cudaReady_<<endl;
-  prepareCUDA(w_,h_);
+  prepareCUDA();
   cout<<"prepareCUDA done"<<endl;
 };
 
@@ -214,7 +219,6 @@ NormalExtractSimpleGpu<T>::~NormalExtractSimpleGpu()
   if(d_w != NULL) checkCudaErrors(cudaFree(d_w));
 //#endif
 //  free(h_nPcl);
-  if(h_dbg != NULL) free(h_dbg);
 };
 
 
@@ -229,50 +233,59 @@ void NormalExtractSimpleGpu<T>::compute(const uint16_t* data, uint32_t w, uint32
   checkCudaErrors(cudaDeviceSynchronize());
   computeGpu(d_depth,w,h);
 
-//  depth2xyzGPU(d_depth, d_x, d_y, d_z,invF_, w_, h_, NULL);
-//  // obtain derivatives using sobel
-//  computeDerivatives(w_,h_);
-//  // obtain the normals using mainly cross product on the derivatives
-////  derivatives2normalsGPU(
-////      d_x,d_y,d_z,
-////      d_xu,d_yu,d_zu,
-////      d_xv,d_yv,d_zv,
-////      d_nImg_.data(),d_haveData_.data(),w_,h_);
-//  derivatives2normalsGPU( d_z, d_zu, d_zv,
-//      d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
-//  nCachedPc_ = false;
-//  nCachedImg_ = false;
-//  pcComputed_ = false;
-//  nCachedComp_ = false;
 };
 
 template<typename T>
-void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
+void NormalExtractSimpleGpu<T>::computeGpu(uint16_t* d_depth)
 {
-  assert(w_ == w);
-  assert(h_ == h);
+  cout<<"NormalExtractSimpleGpu<T>::computeGpu uint16_t "<<w_<<" "<<h_<<endl;
+  // convert depth image to xyz point cloud
+  depth2xyzGPU(d_depth, d_x, d_y, d_z.data(), invF_, w_, h_, NULL);
 
-//    cv::Mat Z(h,w,CV_8UC1);
-  haveDataGpu(depth,d_haveData_.data(),w*h,1);
-//    d_haveData_.get((uint8_t*)Z.data,h,w);
-//    cv::imshow("Z",Z*255);
-//    cv::waitKey(0);
-//    cv::waitKey(0);
+  haveDataGpu(d_x,d_haveData_.data(),wProc_*hProc_,1);
 
-  if(true)
+  computeDerivatives(wProc_,hProc_);
+
+  // obtain the normals using mainly cross product on the derivatives
+  derivatives2normalsGPU(
+      d_x,d_y,d_z.data(),
+      d_xu,d_yu,d_zu.data(),
+      d_xv,d_yv,d_zv,
+      d_nImg_.data(),d_haveData_.data(),w_,h_);
+
+  nCachedPc_ = false;
+  nCachedImg_ = false;
+  pcComputed_ = false;
+  nCachedComp_ = false;
+  if(compress_)
   {
+    compressNormals(w_,h_);
+  }
+}
+
+template<typename T>
+void NormalExtractSimpleGpu<T>::computeGpu(T* depth)
+{
+//  cv::Mat Id(h,w,CV_32FC1);
+//  checkCudaErrors(cudaMemcpy(Id.data, depth, w*h*sizeof(float),
+//                cudaMemcpyDeviceToHost));
+//  cv::Mat Irgb = OpenniVisualizer::colorizeDepth(Id,0.3,4.0);
+//  cv::imshow("Idrgb",Irgb);
+//  cv::waitKey(1);
+
+  haveDataGpu(depth,d_haveData_.data(),wProc_*hProc_,1);
+//  cv::Mat Z(h,w,CV_8UC1);
+//  d_haveData_.get((uint8_t*)Z.data,h,w);
+//  cv::imshow("Z",Z*255);
+//  cv::waitKey(1);
+
+//  if(true)
+//  {
     cout<<"NormalExtractSimpleGpu<T>::computeGpu "<<w_<<" "<<h_<<endl;
     // convert depth image to xyz point cloud
     depth2xyzFloatGPU(depth, d_x, d_y, d_z.data(), invF_, w_, h_, NULL);
 
-//    haveDataGpu(depth,d_haveData_.data(),w*h,1); obtain derivatives
-//    using sobel
-    computeDerivatives(w_,h_);
-
-//    cv::Mat Z(h,w,CV_32FC1);
-//    d_zu.get((T*)Z.data,h,w);
-//    cv::imshow("Z",Z);
-//    cv::waitKey(0);
+    computeDerivatives(wProc_,hProc_);
 
     // obtain the normals using mainly cross product on the derivatives
     derivatives2normalsGPU(
@@ -281,31 +294,20 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
         d_xv,d_yv,d_zv,
         d_nImg_.data(),d_haveData_.data(),w_,h_);
 
-//    cv::Mat Z(h,w,CV_8UC1);
-//    d_haveData_.get((uint8_t*)Z.data,h,w);
-//    cv::imshow("Z",Z*255);
-//    cv::waitKey(0);
-
-  }else{
-    // potentially faster but sth is wrong with the derivatives2normalsGPU
-    // I think this approach is numerically instable since I cannot
-    // renormalize in between
-    setConvolutionKernel(h_sobel_dif);
-    convolutionRowsGPU(c,depth,w,h);
-    setConvolutionKernel(h_sobel_sum);
-    convolutionColumnsGPU(d_zu.data(),c,w,h);
-    convolutionRowsGPU(b,depth,w,h);
-    setConvolutionKernel(h_sobel_dif);
-    convolutionColumnsGPU(d_zv,b,w,h);
-
-    derivatives2normalsGPU(depth, d_zu.data(), d_zv,
-        d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
-
-  }
-//  haveDataGpu(d_nImg_.data(),d_haveData_.data(),w*h,3);
-//    d_haveData_.get((uint8_t*)Z.data,h,w);
-//    cv::imshow("Z",Z*255);
-//    cv::waitKey(0);
+//  }else{
+//    // potentially faster but sth is wrong with the derivatives2normalsGPU
+//    setConvolutionKernel(h_sobel_dif);
+//    convolutionRowsGPU(c,depth,w,h);
+//    setConvolutionKernel(h_sobel_sum);
+//    convolutionColumnsGPU(d_zu.data(),c,w,h);
+//    convolutionRowsGPU(b,depth,w,h);
+//    setConvolutionKernel(h_sobel_dif);
+//    convolutionColumnsGPU(d_zv,b,w,h);
+//
+//    derivatives2normalsGPU(depth, d_zu.data(), d_zv,
+//        d_nImg_.data(),d_haveData_.data(),invF_,w_,h_);
+//
+//  }
 
   nCachedPc_ = false;
   nCachedImg_ = false;
@@ -313,7 +315,7 @@ void NormalExtractSimpleGpu<T>::computeGpu(T* depth, uint32_t w, uint32_t h)
   nCachedComp_ = false;
   if(compress_)
   {
-    compressNormals(w,h);
+    compressNormals(w_,h_);
   }
 };
 
@@ -409,7 +411,6 @@ void NormalExtractSimpleGpu<T>::uncompressCpu(const uint32_t* in,
 template<typename T>
 void NormalExtractSimpleGpu<T>::computeDerivatives(uint32_t w,uint32_t h)
 {
-//  // TODO could reorder stuff here
   setConvolutionKernel(h_sobel_dif);
   convolutionRowsGPU(a,d_x,w,h);
   convolutionRowsGPU(b,d_y,w,h);
@@ -441,30 +442,30 @@ void NormalExtractSimpleGpu<T>::computeAreaWeights()
 
 
 template<typename T>
-void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
+void NormalExtractSimpleGpu<T>::prepareCUDA()
 {
   // CUDA preparations
-  cout << "Allocating and initializing CUDA arrays... "<< w<<" "<<h<<endl;
-  checkCudaErrors(cudaMalloc((void **)&d_depth, w * h * sizeof(uint16_t)));
-  checkCudaErrors(cudaMalloc((void **)&d_x, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&d_y, w * h * sizeof(T)));
-  d_z.resize(h,w);
-  d_zu.resize(h,w);
-//  checkCudaErrors(cudaMalloc((void **)&d_z, w * h * sizeof(T)));
+  cout << "Allocating and initializing CUDA arrays... "<< w_<<" "<<h_<<endl;
+  cout << "Internalt size ... "<< wProc_<<" "<<hProc_<<endl;
+  checkCudaErrors(cudaMalloc((void **)&d_depth, w_ * h_ * sizeof(uint16_t)));
+  checkCudaErrors(cudaMalloc((void **)&d_x, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_y, wProc_ * hProc_ * sizeof(T)));
+  d_z.resize(hProc_,wProc_);
+  d_zu.resize(hProc_,wProc_);
 
-  checkCudaErrors(cudaMalloc((void **)&d_nPcl, w * h *8* sizeof(float)));
-  checkCudaErrors(cudaMalloc((void **)&d_xyz, w * h * 4* sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_nPcl, w_ * h_ *8* sizeof(float)));
+  checkCudaErrors(cudaMalloc((void **)&d_xyz,  w_ * h_ *4* sizeof(T)));
 
-  checkCudaErrors(cudaMalloc((void **)&d_xu, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&d_yu, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&d_xv, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&d_yv, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&d_zv, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&a, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&b, w * h * sizeof(T)));
-  checkCudaErrors(cudaMalloc((void **)&c, w * h * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_xu, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_yu, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_xv, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_yv, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&d_zv, wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&a,    wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&b,    wProc_ * hProc_ * sizeof(T)));
+  checkCudaErrors(cudaMalloc((void **)&c,    wProc_ * hProc_ * sizeof(T)));
 
-   d_haveData_.resize(h,w);
+   d_haveData_.resize(hProc_,wProc_);
    d_haveData_.setOnes();
 //#ifdef WEIGHTED
 //#else
@@ -479,22 +480,20 @@ void NormalExtractSimpleGpu<T>::prepareCUDA(uint32_t w,uint32_t h)
   h_sobel_sum[1] = 2;
   h_sobel_sum[2] = 1;
 
-  n_ = pcl::PointCloud<pcl::PointXYZRGB>(w,h);
+  n_ = pcl::PointCloud<pcl::PointXYZRGB>(w_,h_);
   n_cp_ = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(&n_);
   Map<MatrixXf, Aligned, OuterStride<> > nMat =
     n_.getMatrixXfMap(8,8,0);
-  h_nPcl = nMat.data();//(T *)malloc(w *h *3* sizeof(T));
+  h_nPcl = nMat.data();//(T *)malloc(w_ *h_ *3* sizeof(T));
 
   cout<<nMat.rows()<< " "<<nMat.cols()<<" "<<8<<endl;
-  cout<<w<<" "<<h<<endl;
+  cout<<w_<<" "<<h_<<endl;
 
-  pc_ = pcl::PointCloud<pcl::PointXYZ>(w,h);
+  pc_ = pcl::PointCloud<pcl::PointXYZ>(w_,h_);
   pc_cp_ = pcl::PointCloud<pcl::PointXYZ>::ConstPtr(&pc_);
   Map<MatrixXf, Aligned, OuterStride<> > pcMat =
     pc_.getMatrixXfMap(4,4,0);
-  h_xyz = pcMat.data();//(T *)malloc(w *h *3* sizeof(T));
-
-  h_dbg = (T *)malloc(w *h * sizeof(T));
+  h_xyz = pcMat.data();//(T *)malloc(w_ *h_ *3* sizeof(T));
 
   cudaReady_ = true;
 }
@@ -508,7 +507,7 @@ float* NormalExtractSimpleGpu<T>::d_normalsPcl(){
     pcComputed_ = true;
   }
   return d_nPcl;
-}; // get pointer to memory with pcl point cloud PointCloud<PointXYZRGB>
+}; 
 
 template<typename T>
 pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc()
@@ -565,7 +564,7 @@ cv::Mat NormalExtractSimpleGpu<float>::normalsImg()
   if(!nCachedImg_)
   {
 //    cout<<"NormalExtractSimpleGpu::normalsImg size: "<<w_<<" "<<h_<<endl;
-    nImg_ = cv::Mat(h_,w_,CV_32FC3);
+    nImg_ = cv::Mat(h_,w_,CV_32FC3, 0.f);
     checkCudaErrors(cudaMemcpy(nImg_.data, d_nImg_.data(), w_*h_
           *sizeof(float)*3, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());

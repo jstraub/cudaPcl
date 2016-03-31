@@ -89,7 +89,7 @@ int main (int argc, char** argv)
     new cudaPcl::NormalExtractSimpleGpu<float>(f_d,w,h,compress);
 
   depthFilter->filter(depth);
-  normalExtract->computeGpu(depthFilter->getDepthDevicePtr(),w,h);
+  normalExtract->computeGpu(depthFilter->getDepthDevicePtr());
   cv::Mat normalsImg = normalExtract->normalsImg();
 
   if(outputPath.compare("") != 0)

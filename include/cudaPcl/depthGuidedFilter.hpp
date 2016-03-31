@@ -202,7 +202,7 @@ void DepthGuidedFilterGpu<T>::filter(const cv::Mat& depth)
   tLog.logCycle();
   tLog.printStats();
 #endif
-
+  
   //    return dSmooth;
 }
 

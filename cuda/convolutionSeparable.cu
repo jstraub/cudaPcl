@@ -9,13 +9,9 @@
  *
  */
 
-
-
 #include <assert.h>
 #include <nvidia/helper_cuda.h>
 #include <cudaPcl/convolutionSeparable_common.h>
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Convolution kernel storage
@@ -127,7 +123,7 @@ extern "C" void convolutionRowsGPU(
 ////////////////////////////////////////////////////////////////////////////////
 #define   COLUMNS_BLOCKDIM_X 16
 #define   COLUMNS_BLOCKDIM_Y 8
-#define COLUMNS_RESULT_STEPS 8
+#define   COLUMNS_RESULT_STEPS 8
 #define   COLUMNS_HALO_STEPS 1
 
 __global__ void convolutionColumnsKernel(

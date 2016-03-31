@@ -43,15 +43,16 @@ class OpenniSmoothNormalsGpu : public OpenniVisualizer
 //    Timer t;
     depthFilter->filter(dMap);
 //    t.toctic("smoothing");
-    normalExtract->computeGpu(depthFilter->getDepthDevicePtr(),w,h);
+    normalExtract->computeGpu(depthFilter->getDepthDevicePtr());
 //    t.toctic("normals");
     normals_cb(normalExtract->d_normalsImg(), normalExtract->d_haveData(),w,h);
 //    t.toctic("normals callback");
-//    if(compress_)
-//    {
-//      int32_t nComp =0;
-//      normalsComp_ = normalExtract->normalsComp(nComp);
-//    }
+    if(compress_)
+    {
+      int32_t nComp =0;
+      normalsComp_ = normalExtract->normalsComp(nComp);
+      std::cout << "# compressed normals " << nComp << std::endl;
+    }
   };
 
   /* callback with smoothed normals
@@ -126,13 +127,16 @@ void OpenniSmoothNormalsGpu::visualizePC()
   cv::imshow("normals",nIRGB_);
   if (compress_)  cv::imshow("dcomp",normalsComp_);
 
-  std::vector<cv::Mat> nChans(3);
-  cv::split(normalsImg_,nChans);
-  cv::Mat nNans = nChans[0].clone();
-  showNans(nNans);
-  cv::imshow("normal Nans",nNans);
-  cv::Mat haveData = normalExtract->haveData();
-  cv::imshow("haveData",haveData*200);
+  if (false) {
+    // show additional diagnostics
+    std::vector<cv::Mat> nChans(3);
+    cv::split(normalsImg_,nChans);
+    cv::Mat nNans = nChans[0].clone();
+    showNans(nNans);
+    cv::imshow("normal Nans",nNans);
+    cv::Mat haveData = normalExtract->haveData();
+    cv::imshow("haveData",haveData*200);
+  }
 
 #ifdef USE_PCL_VIEWER
   pc_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new
