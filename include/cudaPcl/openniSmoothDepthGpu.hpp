@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include <jsCore/timer.hpp>
+#include <cudaPcl/openniGrabber.hpp>
 #include <cudaPcl/openniVisualizer.hpp>
 #include <cudaPcl/depthGuidedFilter.hpp>
 
@@ -24,8 +25,8 @@ namespace cudaPcl {
 class OpenniSmoothDepthGpu : public OpenniVisualizer
 {
   public:
-  OpenniSmoothDepthGpu(double eps, uint32_t B) : OpenniVisualizer(), eps_(eps),
-    B_(B), depthFilter(NULL)
+  OpenniSmoothDepthGpu(double eps, uint32_t B) :
+    OpenniVisualizer(false), eps_(eps), B_(B), depthFilter(NULL)
   { };
 
   virtual ~OpenniSmoothDepthGpu() 

@@ -44,7 +44,9 @@ namespace cudaPcl {
 class OpenniVisualizer : public OpenniGrabber
 {
 public:
-  OpenniVisualizer() : OpenniGrabber(), update_(false), pc_(new pcl::PointCloud<pcl::PointXYZRGB>(1,1))
+  OpenniVisualizer(bool visualizeCloud = true) : OpenniGrabber(),
+    visualizeCloud_(visualizeCloud), update_(false), pc_(new
+        pcl::PointCloud<pcl::PointXYZRGB>(1,1))
   {};
 
   virtual ~OpenniVisualizer() 
@@ -66,6 +68,7 @@ public:
   virtual void run();
 
 protected:
+  bool visualizeCloud_;
   bool update_;
   boost::mutex updateModelMutex;
   cv::Mat dColor_;
@@ -80,7 +83,7 @@ protected:
   virtual void visualize_(char key);
   virtual void visualizeRGB();
   virtual void visualizeD();
-  virtual void visualizeNormals();
+  virtual void visualizePC();
 
   virtual void rgb_cb_ (const boost::shared_ptr<openni_wrapper::Image>& rgb)
   {
@@ -89,13 +92,13 @@ protected:
     int h = rgb->getHeight(); 
     // TODO: uggly .. but avoids double copy of the image.
     boost::mutex::scoped_lock updateLock(updateModelMutex);
-    if(this->rgb_.cols < w)
-    {
+    if(this->rgb_.cols < w) {
       this->rgb_ = cv::Mat(h,w,CV_8UC3);
     }
-    rgb->fillRGB(w,h,this->rgb_.data);
+    cv::Mat Irgb(h,w,CV_8UC3);
+    rgb->fillRGB(w,h,Irgb.data);
+    cv::cvtColor(Irgb, this->rgb_,CV_BGR2RGB);
     rgb_cb(this->rgb_.data,w,h);
-//    update_=true; // only depth updates! otherwise we get weird artifacts.
   }
 
 #ifdef USE_PCL_VIEWER
@@ -112,7 +115,7 @@ void OpenniVisualizer::visualize_(char key)
   static int64_t frameId = 0;
   visualizeRGB();
   visualizeD();
-  visualizeNormals();
+  visualizePC();
   if (key == 's') {
     std::cout << "key: " << key << std::endl;
     std::stringstream ss;
@@ -140,8 +143,9 @@ void OpenniVisualizer::visualizeD()
     cv::imshow("d",dColor_);
 };
 
-void OpenniVisualizer::visualizeNormals()
+void OpenniVisualizer::visualizePC()
 {
+  if (!visualizeCloud_) return;
 #ifdef USE_PCL_VIEWER
   if(!viewer_->updatePointCloud(pc_, "pc"))
     viewer_->addPointCloud(pc_, "pc");
@@ -151,25 +155,34 @@ void OpenniVisualizer::visualizeNormals()
 void OpenniVisualizer::visualizerThread()
 {
 #ifdef USE_PCL_VIEWER
-  // prepare visualizer named "viewer"
-  viewer_ = boost::shared_ptr<pcl::visualization::PCLVisualizer>(
-      new pcl::visualization::PCLVisualizer ("3D Viewer"));
-  viewer_->initCameraParameters ();
-  viewer_->setBackgroundColor (255, 255, 255);
-  viewer_->addCoordinateSystem (1.0);
-  //  viewer_->setPosition(0,0);
-  viewer_->setSize(1000,1000);
+  if (visualizeCloud_) {
+    // prepare visualizer named "viewer"
+    viewer_ = boost::shared_ptr<pcl::visualization::PCLVisualizer>(
+        new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    viewer_->initCameraParameters ();
+    viewer_->setBackgroundColor (255, 255, 255);
+    viewer_->addCoordinateSystem (1.0);
+    viewer_->setSize(1000,1000);
 
-  while (!viewer_->wasStopped ())
-  {
-    viewer_->spinOnce (10);
-    char key = cv::waitKey(10);
-    // Get lock on the boolean update and check if cloud was updated
-    boost::mutex::scoped_lock updateLock(updateModelMutex);
-    if (update_)
-    {
-      visualize_(key);
-      update_ = false;
+    while (!viewer_->wasStopped ()) {
+      viewer_->spinOnce (10);
+      char key = cv::waitKey(10);
+      // Get lock on the boolean update and check if cloud was updated
+      boost::mutex::scoped_lock updateLock(updateModelMutex);
+      if (update_) {
+        visualize_(key);
+        update_ = false;
+      }
+    }
+  } else {
+    while (42) {
+      char key = cv::waitKey(10);
+      // Get lock on the boolean update and check if cloud was updated
+      boost::mutex::scoped_lock updateLock(updateModelMutex);
+      if (update_) {
+        visualize_(key);
+        update_ = false;
+      }
     }
   }
 #else

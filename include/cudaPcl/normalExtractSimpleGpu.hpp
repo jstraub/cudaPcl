@@ -513,7 +513,6 @@ float* NormalExtractSimpleGpu<T>::d_normalsPcl(){
 template<typename T>
 pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc()
 {
-  //TODO bad error here
   if(!nCachedPc_)
   {
     if(!pcComputed_ && w_ > 0 && h_ > 0)
@@ -526,6 +525,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr NormalExtractSimpleGpu<T>::normalsPc
           cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
     nCachedPc_ = true;
+    std::cout << "cached normals" << std::endl;
   }
   return n_cp_;
 };

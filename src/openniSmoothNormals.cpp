@@ -68,7 +68,7 @@ int main (int argc, char** argv)
     {
       v.depth_cb((uint16_t*)depth.data,depth.cols,depth.rows);
       v.visualizeD();
-      v.visualizeNormals();
+      v.visualizePC();
       cv::waitKey(0);
     }
   }

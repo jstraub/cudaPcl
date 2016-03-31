@@ -17,34 +17,33 @@ namespace cudaPcl {
  * Needs the focal length of the depth camera f_d and the parameters for the
  * guided filter eps as well as the filter size B.
  */
-class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
+class OpenniSmoothNormalsGpu : public OpenniVisualizer
 {
   public:
   OpenniSmoothNormalsGpu(double f_d, double eps, uint32_t B, bool
       compress=false)
-    : OpenniSmoothDepthGpu(eps,B), f_d_(f_d), normalExtract(NULL)
-      ,compress_(compress)
+    : OpenniVisualizer(true), eps_(eps), B_(B), f_d_(f_d),
+    depthFilter(NULL), normalExtract(NULL), compress_(compress)
   { };
 
-  virtual ~OpenniSmoothNormalsGpu()
-  {
+  virtual ~OpenniSmoothNormalsGpu() {
     if(normalExtract) delete normalExtract;
   };
 
   virtual void depth_cb(const uint16_t * depth, uint32_t w, uint32_t h)
   {
     if(w==0 || h==0) return;
-    if(!this->depthFilter)
+    if(!depthFilter)
     {
-      this->depthFilter = new DepthGuidedFilterGpu<float>(w,h,eps_,B_);
+      depthFilter = new DepthGuidedFilterGpu<float>(w,h,eps_,B_);
       normalExtract = new NormalExtractSimpleGpu<float>(f_d_,w,h,compress_);
     }
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
 
 //    Timer t;
-    this->depthFilter->filter(dMap);
+    depthFilter->filter(dMap);
 //    t.toctic("smoothing");
-    normalExtract->computeGpu(this->depthFilter->getDepthDevicePtr(),w,h);
+    normalExtract->computeGpu(depthFilter->getDepthDevicePtr(),w,h);
 //    t.toctic("normals");
     normals_cb(normalExtract->d_normalsImg(), normalExtract->d_haveData(),w,h);
 //    t.toctic("normals callback");
@@ -59,14 +58,11 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
    *
    * Note that the pointers are to GPU memory as indicated by the "d_" prefix.
    */
-  virtual void normals_cb(float* d_normalsImg, uint8_t* d_haveData, uint32_t w, uint32_t h)
+  virtual void normals_cb(float* d_normalsImg, uint8_t* d_haveData,
+      uint32_t w, uint32_t h)
   {
     if(w==0 || h==0) return;
-//    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr nDispPtr =
-//    normalExtract->normalsPc();
     boost::mutex::scoped_lock updateLock(updateModelMutex);
-//    nDisp_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(
-//        new pcl::PointCloud<pcl::PointXYZRGB>(*nDispPtr));
     normalsImg_ = normalExtract->normalsImg();
 
     if(false)
@@ -91,10 +87,13 @@ class OpenniSmoothNormalsGpu : public OpenniSmoothDepthGpu
   };
 
   virtual void visualizeD();
-  virtual void visualizeNormals();
+  virtual void visualizePC();
 
   protected:
+  double eps_;
+  uint32_t B_;
   double f_d_;
+  DepthGuidedFilterGpu<float> * depthFilter;
   NormalExtractSimpleGpu<float> * normalExtract;
   bool compress_;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr nDisp_;
@@ -116,10 +115,10 @@ void OpenniSmoothNormalsGpu::visualizeD()
   }
 };
 
-void OpenniSmoothNormalsGpu::visualizeNormals()
+void OpenniSmoothNormalsGpu::visualizePC()
 {
-  if (normalsImg_.empty() || normalsImg_.rows == 0 || normalsImg_.cols == 0) return;
-
+  if (normalsImg_.empty() || normalsImg_.rows == 0 || normalsImg_.cols
+      == 0) return;
   cv::Mat nI (normalsImg_.rows,normalsImg_.cols, CV_8UC3);
 //  cv::Mat nIRGB(normalsImg_.rows,normalsImg_.cols,CV_8UC3);
   normalsImg_.convertTo(nI, CV_8UC3, 127.5,127.5);
@@ -127,23 +126,29 @@ void OpenniSmoothNormalsGpu::visualizeNormals()
   cv::imshow("normals",nIRGB_);
   if (compress_)  cv::imshow("dcomp",normalsComp_);
 
-//  std::vector<cv::Mat> nChans(3);
-//  cv::split(normalsImg_,nChans);
-//  cv::Mat nNans = nChans[0].clone();
-//  showNans(nNans);
-//  cv::imshow("normal Nans",nNans);
-
-//  cv::Mat haveData = normalExtract->haveData();
-//  cv::imshow("haveData",haveData*200);
+  std::vector<cv::Mat> nChans(3);
+  cv::split(normalsImg_,nChans);
+  cv::Mat nNans = nChans[0].clone();
+  showNans(nNans);
+  cv::imshow("normal Nans",nNans);
+  cv::Mat haveData = normalExtract->haveData();
+  cv::imshow("haveData",haveData*200);
 
 #ifdef USE_PCL_VIEWER
-  //copy again
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr nDisp(
-      new pcl::PointCloud<pcl::PointXYZRGB>(*nDisp_));
-  this->pc_ = nDisp;
-//  this->pc_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(nDisp);
-  if(!this->viewer_->updatePointCloud(pc_, "pc"))
-    this->viewer_->addPointCloud(pc_, "pc");
+  pc_ = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new
+      pcl::PointCloud<pcl::PointXYZRGB>());
+  for (uint32_t i=0; i<normalsImg_.rows; ++i) 
+    for (uint32_t j=0; j<normalsImg_.cols; ++j) {
+      pcl::PointXYZRGB p;
+      p.x = normalsImg_.at<cv::Vec3f>(i,j)[0];
+      p.y = normalsImg_.at<cv::Vec3f>(i,j)[1];
+      p.z = normalsImg_.at<cv::Vec3f>(i,j)[2];
+      p.rgb = 0;
+      float norm = p.x*p.x+p.y*p.y+p.z*p.z;
+      if (0.98 <= norm && norm <= 1.02) pc_->push_back(p);
+    }
+  if(!this->viewer_->updatePointCloud(this->pc_, "pc"))
+    this->viewer_->addPointCloud(this->pc_, "pc");
 #endif
 }
 

@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include <jsCore/timer.hpp>
+#include <cudaPcl/openniGrabber.hpp>
 #include <cudaPcl/openniVisualizer.hpp>
 
 using std::cout;
@@ -22,10 +23,10 @@ namespace cudaPcl {
  * OpenniSmoothDepth smoothes the depth frame using a guided filter making on
  * the CPU in about 30ms.
  */
-class OpenniSmoothDepth : public OpenniVisualizer
+class OpenniSmoothDepth : public OpenniGrabber
 {
   public:
-  OpenniSmoothDepth() : OpenniVisualizer()
+  OpenniSmoothDepth() : OpenniGrabber()
   {};
 
   virtual ~OpenniSmoothDepth() 
@@ -42,8 +43,8 @@ class OpenniSmoothDepth : public OpenniVisualizer
     jsc::Timer t;
     cv::Mat dSmooth = smoothDepthCpu(dMap,0.08*0.08,10);
     t.toctic("smoothing");
-    cv::Mat dColor = colorizeDepth(dMap);
-    cv::Mat dSmoothColor = colorizeDepth(dSmooth);
+    cv::Mat dColor = OpenniVisualizer::colorizeDepth(dMap);
+    cv::Mat dSmoothColor = OpenniVisualizer::colorizeDepth(dSmooth);
     cv::imshow("d",dColor);
     cv::imshow("dSmooth",dSmoothColor);
     cv::waitKey(1);
