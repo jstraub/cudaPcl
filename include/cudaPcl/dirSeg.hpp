@@ -171,7 +171,7 @@ void DirSeg::compute(const uint16_t* depth, uint32_t w, uint32_t h)
   depthFilter_->filter(dMap);
   tLog_.toctic(0,1);
   cout<<" -- extract surface normals on GPU"<<endl;
-  normalExtract_->computeGpu(depthFilter_->getDepthDevicePtr(),w_,h_);
+  normalExtract_->computeGpu(depthFilter_->getDepthDevicePtr());
   compute_();
 };
 
