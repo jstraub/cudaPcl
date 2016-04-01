@@ -149,10 +149,12 @@ void OpenniSmoothNormalsGpu::visualizePC()
       p.z = normalsImg_.at<cv::Vec3f>(i,j)[2];
       p.rgb = 0;
       float norm = p.x*p.x+p.y*p.y+p.z*p.z;
-      if (0.98 <= norm && norm <= 1.02) pc_->push_back(p);
+      if (0.98 <= norm && norm <= 1.02) this->pc_->push_back(p);
     }
-  if(!this->viewer_->updatePointCloud(this->pc_, "pc"))
-    this->viewer_->addPointCloud(this->pc_, "pc");
+  if (this->pc_->size() > 0) {
+    if(!this->viewer_->updatePointCloud(this->pc_, "pc"))
+      this->viewer_->addPointCloud(this->pc_, "pc");
+  }
 #endif
 }
 
