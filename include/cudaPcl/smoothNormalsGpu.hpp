@@ -7,6 +7,7 @@
 #include <cudaPcl/openniSmoothDepthGpu.hpp>
 #include <cudaPcl/normalExtractSimpleGpu.hpp>
 #include <cudaPcl/cv_helpers.hpp>
+#include <jsCore/timer.hpp>
 
 namespace cudaPcl {
 
@@ -40,13 +41,13 @@ class SmoothNormalsGpu
     }
     cv::Mat dMap = cv::Mat(h,w,CV_16U,const_cast<uint16_t*>(depth));
 
-//    Timer t;
+    jsc::Timer t;
     depthFilter->filter(dMap);
-//    t.toctic("smoothing");
+    t.toctic("smoothing");
     normalExtract->computeGpu(depthFilter->getDepthDevicePtr());
-//    t.toctic("normals");
+    t.toctic("normals");
     normals_cb(normalExtract->d_normalsImg(), normalExtract->d_haveData(),w,h);
-//    t.toctic("normals callback");
+    t.toctic("normals callback");
     if(compress_)
     {
       int32_t nComp =0;

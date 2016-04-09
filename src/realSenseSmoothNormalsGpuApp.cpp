@@ -6,7 +6,14 @@
 
 int main (int argc, char** argv)
 {
-  cudaPcl::RealSenseSmoothNormalsGpu g(640,480,60);
+    
+  double f_d = 540.;
+  double eps = 0.2*0.2;
+  int32_t B = 10;
+  bool compress = false;
+  findCudaDevice(argc,(const char**)argv);
+  cudaPcl::RealSenseSmoothNormalsGpu g(f_d, eps, B, compress);
   g.run ();
+  cout<<cudaDeviceReset()<<endl;
   return (0);
 }

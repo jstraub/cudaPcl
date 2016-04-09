@@ -1,6 +1,7 @@
 build
 pod-build
 jsCore
+rgbdGrabber
 *~
 *.pyc
 *.csv
