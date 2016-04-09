@@ -178,6 +178,7 @@ endif()
 #  opencv_highgui opencv_core
 #  )
 
+
   add_executable(renderPcFromPc ./src/renderPcFromPc.cpp
     ./src/pinhole.cpp)
   target_link_libraries (renderPcFromPc boost_system boost_thread
@@ -198,6 +199,18 @@ endif()
 
   pods_install_executables( rndTransformPc renderPcFromPc
     testSurfelRender)
+
+  cuda_add_executable(realSenseSmoothNormalsGpuApp
+    ./src/realSenseSmoothNormalsGpuApp.cpp
+    )
+  target_link_libraries (realSenseSmoothNormalsGpuApp
+    cudaPcl realsense rgbdGrabber
+#    boost_system boost_thread pcl_common
+#    boost_program_options
+    opencv_core opencv_highgui opencv_contrib  opencv_imgproc
+#    pcl_io pcl_visualization OpenNI #XnVNite
+#    vtkCommon vtkFiltering vtkRendering
+    )
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
@@ -222,6 +235,8 @@ pods_install_headers(
   ./include/cudaPcl/pinhole.h
   ./include/cudaPcl/openniPyramid.hpp
   ./include/cudaPcl/surfel.hpp
+  ./include/cudaPcl/smoothNormalsGpu.hpp
+  ./include/cudaPcl/realSenseSmoothNormalsGpu.hpp
   DESTINATION cudaPcl)
 
 #install(DIRECTORY include/cudaPcl/ DESTINATION include/cudaPcl/
