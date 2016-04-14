@@ -200,17 +200,17 @@ endif()
   pods_install_executables( rndTransformPc renderPcFromPc
     testSurfelRender)
 
-  cuda_add_executable(realSenseSmoothNormalsGpuApp
-    ./src/realSenseSmoothNormalsGpuApp.cpp
-    )
-  target_link_libraries (realSenseSmoothNormalsGpuApp
-    cudaPcl realsense rgbdGrabber
-#    boost_system boost_thread pcl_common
-#    boost_program_options
-    opencv_core opencv_highgui opencv_contrib  opencv_imgproc
-#    pcl_io pcl_visualization OpenNI #XnVNite
-#    vtkCommon vtkFiltering vtkRendering
-    )
+#  cuda_add_executable(realSenseSmoothNormalsGpuApp
+#    ./src/realSenseSmoothNormalsGpuApp.cpp
+#    )
+#  target_link_libraries (realSenseSmoothNormalsGpuApp
+#    cudaPcl realsense rgbdGrabber
+##    boost_system boost_thread pcl_common
+##    boost_program_options
+#    opencv_core opencv_highgui opencv_contrib  opencv_imgproc
+##    pcl_io pcl_visualization OpenNI #XnVNite
+##    vtkCommon vtkFiltering vtkRendering
+#    )
 
 pods_install_headers(
   ./include/cudaPcl/convolutionSeparable_common.h 
