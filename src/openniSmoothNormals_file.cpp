@@ -76,12 +76,20 @@ int main (int argc, char** argv)
 
   findCudaDevice(argc,(const char**)argv);
   cv::Mat depth = cv::imread(inputPath,CV_LOAD_IMAGE_ANYDEPTH);
+  std::cout << "reading depth from " << inputPath << std::endl;
   inputPath.replace(inputPath.end()-5, inputPath.end(), "rgb.png");
 
+  std::cout << "reading rgb from " << inputPath << std::endl;
   cv::Mat rgb = cv::imread(inputPath);
+  std::cout << "reading gray from " << inputPath << std::endl;
   cv::Mat gray = cv::imread(inputPath, CV_LOAD_IMAGE_GRAYSCALE);
   uint32_t w = depth.cols;
   uint32_t h = depth.rows;
+
+  if (w==0 || h==0) {
+    std::cout << "could not load images" << std::endl;
+    return (1);
+  }
 
   cudaPcl::DepthGuidedFilterGpu<float>* depthFilter = 
     new cudaPcl::DepthGuidedFilterGpu<float>(w,h,eps,B);
@@ -104,13 +112,13 @@ int main (int argc, char** argv)
 //          << normalsImg.at<cv::Vec3f>(i,j)[1] << " "
 //          << normalsImg.at<cv::Vec3f>(i,j)[2] <<endl;
     out.close();
-    cout<<"output writen to "<<outputPath<< ".normals" <<endl;
+    cout << "surface normals writen to "<<outputPath<< ".normals" <<endl;
   
     cv::Mat dSmooth = depthFilter->getOutput();
     cv::Mat dSmoothS;
     dSmooth.convertTo(dSmoothS, CV_16U, 1000.);
     cv::imwrite((outputPath+"_dSmooth.png").data(), dSmoothS);
-    std::cout << "output written to " << (outputPath+"_dSmooth.png") << std::endl;
+    std::cout << "smooth depth written to " << (outputPath+"_dSmooth.png") << std::endl;
 
 //    cv::Mat depth2 = cv::imread((outputPath+"_dSmooth.png").data(),CV_LOAD_IMAGE_ANYDEPTH);
 //    cv::imshow("n",dSmoothS);
