@@ -1,4 +1,4 @@
-/* Copyright (c) 2014, Julian Straub <jstraub@csail.mit.edu>
+/* Copyright (c) 2016, Julian Straub <jstraub@csail.mit.edu>
  * Licensed under the MIT license. See the license file LICENSE.
  */
 #include <iostream>
@@ -241,6 +241,7 @@ int main (int argc, char** argv)
     ("angle,a", po::value<double>(),"magnitude of rotation (deg)")
     ("translation,t", po::value<double>(),"magnitude of translation (m)")
     ("min,m", po::value<double>(),"minimum overlap to be accepted (%)")
+    ("local,l", "simulate local alignment problem i.e. do not transform the pointclouds by a random transformation")
     ;
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -362,21 +363,26 @@ int main (int argc, char** argv)
     out.close();
   }
 
-  // Now sample another transformation of the same parameters to
-  // transform pcB
-  Eigen::Matrix3f R_B_B;
-  Eigen::Vector3f t_B_B;
-  SampleTransformation(angle, translation, R_B_B, t_B_B);
-  // Transform pc B
-  for (uint32_t i=0; i<pcOutB.size(); ++i) {
-    Eigen::Map<Eigen::Vector3f> p(&(pcOutB.at(i).x));
-    p = R_B_B * p + t_B_B;
-    Eigen::Map<Eigen::Vector3f> n(pcOutB.at(i).normal);
-    n = R_B_B*n;
+  // If we want to simulate a global alignment problem sample another
+  // intermediate random transformation and apply it to pointcloud B as
+  // well as the global true transformation.
+  if(!vm.count("local")) {
+    // Now sample another transformation of the same parameters to
+    // transform pcB
+    Eigen::Matrix3f R_B_B;
+    Eigen::Vector3f t_B_B;
+    SampleTransformation(angle, translation, R_B_B, t_B_B);
+    // Transform pc B
+    for (uint32_t i=0; i<pcOutB.size(); ++i) {
+      Eigen::Map<Eigen::Vector3f> p(&(pcOutB.at(i).x));
+      p = R_B_B * p + t_B_B;
+      Eigen::Map<Eigen::Vector3f> n(pcOutB.at(i).normal);
+      n = R_B_B*n;
+    }
+    // chain the new transformation into the global transformation.
+    R_B_W = R_B_B*R_B_W;
+    t_B_W = R_B_B*t_B_W + t_B_B;
   }
-  // chain the new transformation into the global transformation.
-  R_B_W = R_B_B*R_B_W;
-  t_B_W = R_B_B*t_B_W + t_B_B;
   // Write the Point clouds to files.
   pcl::PLYWriter writer;
   writer.write(outputPathA, pcOutA, false, false);
