@@ -51,7 +51,7 @@ int main (int argc, char** argv)
     return 1;
   }
 
-  double f_d = 540.;
+  double f_d = 520.;
   double eps = 0.2*0.2;
   int32_t B = 10;
   bool compress = false;
