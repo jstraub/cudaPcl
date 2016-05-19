@@ -302,7 +302,8 @@ void NormalExtractSimpleGpu<T>::prepareCUDA()
   h_sobel_sum[2] = 1;
 
   n_ = pcl::PointCloud<pcl::PointXYZRGB>(w_,h_);
-  n_cp_ = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(&n_);
+  n_cp_ = pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr(&n_,
+       &DoNotFree<pcl::PointCloud<pcl::PointXYZRGB> >);
   Map<MatrixXf, Aligned, OuterStride<> > nMat =
     n_.getMatrixXfMap(8,8,0);
   h_nPcl = nMat.data();//(T *)malloc(w_ *h_ *3* sizeof(T));
@@ -310,11 +311,11 @@ void NormalExtractSimpleGpu<T>::prepareCUDA()
   cout<<nMat.rows()<< " "<<nMat.cols()<<" "<<8<<endl;
   cout<<w_<<" "<<h_<<endl;
 
-  pc_ = pcl::PointCloud<pcl::PointXYZ>(w_,h_);
-  pc_cp_ = pcl::PointCloud<pcl::PointXYZ>::ConstPtr(&pc_);
-  Map<MatrixXf, Aligned, OuterStride<> > pcMat =
-    pc_.getMatrixXfMap(4,4,0);
-  h_xyz = pcMat.data();//(T *)malloc(w_ *h_ *3* sizeof(T));
+//  pc_ = pcl::PointCloud<pcl::PointXYZ>(w_,h_);
+//  pc_cp_ = pcl::PointCloud<pcl::PointXYZ>::ConstPtr(&pc_);
+//  Map<MatrixXf, Aligned, OuterStride<> > pcMat =
+//    pc_.getMatrixXfMap(4,4,0);
+//  h_xyz = pcMat.data();//(T *)malloc(w_ *h_ *3* sizeof(T));
 
   cudaReady_ = true;
 }

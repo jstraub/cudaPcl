@@ -19,8 +19,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <cudaPcl/openniGrabber.hpp>
-#define USE_PCL_VIEWER
 
+#define USE_PCL_VIEWER
 //#include <pcl/point_cloud.h>
 //#include <pcl/impl/point_types.hpp>
 #include <pcl/common/common_headers.h>

@@ -171,11 +171,14 @@ protected:
 
     pcl::PointCloud<pcl::PointXYZRGB> n_;
     pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr n_cp_;
-
-    pcl::PointCloud<pcl::PointXYZ> pc_;
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr pc_cp_;
+//    pcl::PointCloud<pcl::PointXYZ> pc_;
+//    pcl::PointCloud<pcl::PointXYZ>::ConstPtr pc_cp_;
 
     cv::Mat nImg_;
 };
+
+template <class T>
+static void DoNotFree(T*)
+{ }
 }
 #include <cudaPcl/normalExtractSimpleGpu_impl.hpp>
