@@ -77,13 +77,13 @@ if(NOT DRC)
     )
 endif()
 
-#add_executable(pclNormals ./src/pclNormals.cpp)
-#target_link_libraries (pclNormals
-#  boost_system boost_thread  boost_program_options
-#  pcl_common pcl_io pcl_search pcl_visualization pcl_features
-#  vtkCommon vtkFiltering vtkRendering
-#  OpenNI XnVNite
-#  opencv_core opencv_highgui)
+add_executable(pclNormals ./src/pclNormals.cpp)
+target_link_libraries (pclNormals
+  boost_system boost_thread  boost_program_options
+  pcl_common pcl_io pcl_search pcl_visualization pcl_features
+  vtkCommon vtkFiltering vtkRendering
+  OpenNI XnVNite
+  opencv_core opencv_highgui)
 
 if(OPENNI)
 cuda_add_library(cudaPcl SHARED

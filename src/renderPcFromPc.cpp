@@ -35,6 +35,35 @@ double ToRad(double deg) {
   return deg/180.*M_PI;
 }
 
+Eigen::Vector3d ComputePcMean(pcl::PointCloud<pcl::PointXYZRGB>&
+    pc) {
+  // take 3 values (x,y,z of normal) with an offset of 4 values (x,y,z
+  // and one float which is undefined) and the step is 12 (4 for xyz, 4
+  // for normal xyz and 4 for curvature and rgb).
+  Eigen::MatrixXf xyz = pc.getMatrixXfMap(3, 8, 0); // this works for PointXYZRGB?
+  Eigen::Vector3d mean =  Eigen::Vector3d::Zero();
+
+  for (size_t i=0; i<xyz.cols(); ++i) {
+    mean += xyz.col(i).cast<double>();
+  }
+  return  mean / xyz.cols();
+}
+
+Eigen::Matrix3d ComputePcCov(pcl::PointCloud<pcl::PointXYZRGB>&
+    pc) {
+
+  // take 3 values (x,y,z of normal) with an offset of 4 values (x,y,z
+  // and one float which is undefined) and the step is 12 (4 for xyz, 4
+  // for normal xyz and 4 for curvature and rgb).
+  Eigen::MatrixXf xyz = pc.getMatrixXfMap(3, 8, 0); // this works for PointXYZRGB?
+  Eigen::Vector3d mean = ComputePcMean(pc);
+  Eigen::Matrix3d S = Eigen::Matrix3d::Zero();
+  for (size_t i=0; i<xyz.cols(); ++i) {
+    S += (xyz.col(i).cast<double>()-mean)*(xyz.col(i).cast<double>()-mean).transpose();
+  }
+  return  S / (xyz.cols()-1);
+}
+
 void SampleTransformation(float angle, float translation, 
     Eigen::Matrix3f& R, Eigen::Vector3f& t) {
   // Using boost here because C11 and CUDA seem to have troubles.
@@ -146,6 +175,12 @@ bool RenderPointCloudNoisy(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
   sor.setStddevMulThresh (1.0);
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_f(new pcl::PointCloud<pcl::PointXYZRGB>);
   sor.filter (*cloud_f);
+
+//  Eigen::Matrix3d S = ComputePcCov(*cloud_f);
+//  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(S);
+//  std::cout << eig.eigenvalues().array().sqrt().matrix().transpose() << std::endl;
+//  if (!(eig.eigenvalues().array().sqrt() > 0.10).all()) 
+//    return false;
   
   // Extract surface normals
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
@@ -153,7 +188,7 @@ bool RenderPointCloudNoisy(const pcl::PointCloud<pcl::PointXYZRGBNormal>& pcIn,
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB> ());
   ne.setSearchMethod (tree);
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-  ne.setKSearch(200);
+  ne.setKSearch(100);
   ne.compute (*cloud_normals);
 
   pcOut.clear();
@@ -306,41 +341,50 @@ int main (int argc, char** argv)
   float f = 540.;
   Eigen::Matrix3f R_A_W, R_B_W;
   Eigen::Vector3f t_A_W, t_B_W;
+  bool succA = false;
+  bool succB = false;
   double overlap = 0.;
+  uint32_t attemptsOuter = 0;
   uint32_t attempts = 0;
   do {
-    // sample pc A
-    SampleTransformation(angle, translation, R_A_W, t_A_W);
+    overlap = 0.;
+    attempts = 0;
+    do {
+      // sample pc A
+      R_A_W = Eigen::Matrix3f::Identity();
+      t_A_W = Eigen::Vector3f::Zero();
+//      SampleTransformation(angle, translation, R_A_W, t_A_W);
+      cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
+      if (!RenderPointCloud(pcIn, camA, pcOutA))
+        continue;
+      // sample pc B
+      SampleTransformation(angle, translation, R_B_W, t_B_W);
+      cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
+      if (!RenderPointCloud(pcIn, camB, pcOutB))
+        continue;
+
+      uint32_t hitsAinB = VisiblePointsOfPcInCam(pcOutA, R_A_W, t_A_W, camB);
+      uint32_t hitsBinA = VisiblePointsOfPcInCam(pcOutB, R_B_W, t_B_W, camA);
+
+      overlap = std::min(100*hitsAinB/float(pcOutA.size()),
+          100*hitsBinA/float(pcOutB.size()));
+
+      ++ attempts;
+      if (attempts%20 == 0) {
+        std::cout << ".";
+        std::cout.flush();
+      }
+    } while(overlap < min_overlap && attempts < 1000);
+    std::cout << std::endl;
+    std::cout << "overlap: " << overlap 
+      << "% attempt: " << attempts<< std::endl;
+    if (attempts >= 1000) return 1;
+    // Now sample point clouds from those views.
     cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
-    if (!RenderPointCloud(pcIn, camA, pcOutA))
-      continue;
-    // sample pc B
-    SampleTransformation(angle, translation, R_B_W, t_B_W);
+    succA = RenderPointCloudNoisy(pcIn, camA, pcOutA, 2);
     cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
-    if (!RenderPointCloud(pcIn, camB, pcOutB))
-      continue;
-
-    uint32_t hitsAinB = VisiblePointsOfPcInCam(pcOutA, R_A_W, t_A_W, camB);
-    uint32_t hitsBinA = VisiblePointsOfPcInCam(pcOutB, R_B_W, t_B_W, camA);
-    overlap = std::min(100*hitsAinB/float(pcOutA.size()),
-        100*hitsBinA/float(pcOutB.size()));
-
-    ++ attempts;
-    if (attempts%20 == 0) {
-      std::cout << ".";
-      std::cout.flush();
-    }
-  } while(overlap < min_overlap && attempts < 1000);
-  std::cout << std::endl;
-  std::cout << "overlap: " << overlap 
-    << "% attempt: " << attempts<< std::endl;
-  if (attempts >= 1000) return 1;
-
-  // Now sample point clouds from those views.
-  cudaPcl::Pinhole camA(R_A_W, t_A_W, f, w, h);
-  RenderPointCloudNoisy(pcIn, camA, pcOutA, 2);
-  cudaPcl::Pinhole camB(R_B_W, t_B_W, f, w, h);
-  RenderPointCloudNoisy(pcIn, camB, pcOutB, 2);
+    succB = RenderPointCloudNoisy(pcIn, camB, pcOutB, 2);
+  } while ((!succA || !succB) && attemptsOuter < 100);
 
   {
     Eigen::Quaternionf q(R_A_W);

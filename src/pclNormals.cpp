@@ -50,6 +50,7 @@ int main (int argc, char** argv)
   cout<< " output to "<<outputPath<<endl;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  if (pcl::io::loadPLYFile(inputPath, *cloud))
   {
     std::cout << "Cloud reading failed." << std::endl;
     return (-1);
