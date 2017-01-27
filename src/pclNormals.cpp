@@ -50,11 +50,17 @@ int main (int argc, char** argv)
   cout<< " output to "<<outputPath<<endl;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  if (pcl::io::loadPLYFile(inputPath, *cloud))
-  {
-    std::cout << "Cloud reading failed." << std::endl;
-    return (-1);
-  }
+  pcl::PLYReader reader;
+  if (reader.read(inputPath, *cloud)) 
+    std::cout << "error reading " << inputPath << std::endl;
+  else
+    std::cout << "loaded pc from " << inputPath << ": " << cloud->width << "x"
+      << cloud->height << std::endl;
+//  if (pcl::io::loadPLYFile(inputPath, *cloud))
+//  {
+//    std::cout << "Cloud reading failed." << std::endl;
+//    return (-1);
+//  }
 
 //  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("test_pcd.pcd", *cloud) == -1) //* load the file
 //  {
@@ -111,19 +117,27 @@ int main (int argc, char** argv)
 
   cout<<normals->width<<" "<<normals->height<<endl;
 
-  pcl::PointCloud<pcl::PointNormal>::Ptr ptNormals (new pcl::PointCloud<pcl::PointNormal>(normals->width,normals->height)); 
-  for(uint32_t i=0; i< normals->width; ++i)
-  {
-    ptNormals->points[i].x = cloud->points[i].x;
-    ptNormals->points[i].y = cloud->points[i].y;
-    ptNormals->points[i].z = cloud->points[i].z;
-    ptNormals->points[i].normal_x = normals->points[i].normal_x;
-    ptNormals->points[i].normal_y = normals->points[i].normal_y;
-    ptNormals->points[i].normal_z = normals->points[i].normal_z;
-
+  pcl::PointCloud<pcl::PointXYZRGBNormal> ptNormals(normals->width,
+      normals->height);
+  for(uint32_t i=0; i< ptNormals.size(); ++i) {
+    ptNormals.at(i).x = cloud->points[i].x;
+    ptNormals.at(i).y = cloud->points[i].y;
+    ptNormals.at(i).z = cloud->points[i].z;
+    if (normals->points[i].normal_x == normals->points[i].normal_x
+        && normals->points[i].normal_y == normals->points[i].normal_y
+        && normals->points[i].normal_z == normals->points[i].normal_z) {
+      ptNormals.at(i).normal_x = normals->points[i].normal_x;
+      ptNormals.at(i).normal_y = normals->points[i].normal_y;
+      ptNormals.at(i).normal_z = normals->points[i].normal_z;
+    } else {
+      ptNormals.at(i).normal_x = 0;
+      ptNormals.at(i).normal_y = 0;
+      ptNormals.at(i).normal_z = 1;
+    }
   }
   
-  pcl::io::savePLYFile <pcl::PointNormal> (outputPath, *ptNormals);
+  pcl::PLYWriter writer;
+  writer.write(outputPath, ptNormals, false, false);
 
   return 0;
 
