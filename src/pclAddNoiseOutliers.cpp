@@ -10,6 +10,11 @@
 #include <pcl/features/normal_3d.h>
 
 #include <boost/program_options.hpp>
+#include <boost/random/mersenne_twister.hpp>
+//#include <boost/random/variate_generator.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
 
 namespace po = boost::program_options;
 using std::cout;
@@ -17,9 +22,17 @@ using std::endl;
 
 #include <jsCore/timer.hpp>
 
+void ComputePcBoundaries(const pcl::PointCloud<pcl::PointXYZ>&
+    pc, Eigen::Vector3f& min, Eigen::Vector3f& max) {
+  const Eigen::Map<const Eigen::MatrixXf,1,Eigen::OuterStride<> > x = pc.getMatrixXfMap(1, 4, 0); // this works for PointXYZRGBNormal
+  const Eigen::Map<const Eigen::MatrixXf,1,Eigen::OuterStride<> > y = pc.getMatrixXfMap(1, 4, 1); // this works for PointXYZRGBNormal
+  const Eigen::Map<const Eigen::MatrixXf,1,Eigen::OuterStride<> > z = pc.getMatrixXfMap(1, 4, 2); // this works for PointXYZRGBNormal
+  min << x.minCoeff(), y.minCoeff(), z.minCoeff();
+  max << x.maxCoeff(), y.maxCoeff(), z.maxCoeff();
+}
+
 int main (int argc, char** argv)
 {
-
   // Declare the supported options.
   po::options_description desc("Allowed options");
   desc.add_options()
@@ -27,6 +40,9 @@ int main (int argc, char** argv)
     ("input,i", po::value<string>(),"path to input")
     ("output,o", po::value<string>(),"path to output")
     ("scale,s", po::value<float>(),"scale for normal extraction search radius")
+    ("noiseStd,n", po::value<float>(),"std of isotropic gaussian noise to be added")
+    ("outlierRatio,r", po::value<float>(),"ratio of outliers to be achieved for the output pc")
+    ("bbFactor,f", po::value<float>(),"bounding box scaling factor for outlier sampling")
     ;
 
   po::variables_map vm;
@@ -38,15 +54,23 @@ int main (int argc, char** argv)
     return 1;
   }
 
+  float bbFactor = 2.;
+  float noiseStd = 0.;
+  float outlier = 0.;
   float scale = 0.1;
   string inputPath = "./file.ply";
   string outputPath = "./out.ply";
   if(vm.count("input")) inputPath = vm["input"].as<string>();
   if(vm.count("output")) outputPath = vm["output"].as<string>();
   if(vm.count("scale")) scale = vm["scale"].as<float>();
+  if(vm.count("noiseStd")) noiseStd = vm["noiseStd"].as<float>();
+  if(vm.count("outlierRatio")) outlier = vm["outlierRatio"].as<float>();
+  if(vm.count("bbFactor")) bbFactor = vm["bbFactor"].as<float>();
 
   cout<< " extracting from "<<inputPath<<endl;
   cout<< " scale for normal estimation radius: "<<scale<<endl;
+  cout<< " noise stdandard deviation: "<<noiseStd<<endl;
+  cout<< " final outlier ration : "<<outlier<<endl;
   cout<< " output to "<<outputPath<<endl;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -56,43 +80,41 @@ int main (int argc, char** argv)
   else
     std::cout << "loaded pc from " << inputPath << ": " << cloud->width << "x"
       << cloud->height << std::endl;
-//  if (pcl::io::loadPLYFile(inputPath, *cloud))
-//  {
-//    std::cout << "Cloud reading failed." << std::endl;
-//    return (-1);
-//  }
-
-//  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("test_pcd.pcd", *cloud) == -1) //* load the file
-//  {
-//    PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
-//    return (-1);
-//  }
 
   int w = cloud->width;
   int h = cloud->height;
   cout<<w << "x"<<h<<endl;
 
-//  cloud->points[10+w*10] = pcl::PointXYZ(1.0,2.0,3.0);
-//  cout<<cloud->points.data()<<endl;
-//  float* data = cloud->points.data()->data;
-//  cout<<data[(10+w*10)*3+0]<<" "<<data[(10+w*10)*3+1]<<" "<<data[(10+w*10)*3+2]<<endl;
-//  cout<<cloud->points[10+w*10]<<endl;
-
-  // estimate normals on a organized point cloud
-  if(false)
-  {
-    jsc::Timer t0;
-    pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
-    pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-    ne.setNormalEstimationMethod (ne.AVERAGE_3D_GRADIENT); // 31ms
-    //ne.setNormalEstimationMethod (ne.AVERAGE_DEPTH_CHANGE); // 23ms
-    //ne.setNormalEstimationMethod (ne.COVARIANCE_MATRIX); // 47ms
-    ne.setMaxDepthChangeFactor(0.02f);
-    ne.setNormalSmoothingSize(10.0f);
-    ne.setInputCloud(cloud);
-    ne.compute(*normals);
-    t0.toc();
-    cout<<t0<<endl;
+  boost::random::mt19937 gen;   
+  if (noiseStd > 0.) {
+    std::cout << " adding noise with std " << noiseStd << std::endl;
+    boost::random::normal_distribution<float> normal(0.0,noiseStd);
+    for(uint32_t i=0; i< cloud->size(); ++i) {
+      cloud->at(i).x += normal(gen);
+      cloud->at(i).y += normal(gen);
+      cloud->at(i).z += normal(gen);
+    }
+  }
+  if (outlier > 0.) {
+    uint32_t nOutl = outlier/(1.-outlier)*cloud->size();
+    std::cout << " adding " << nOutl << " outliers to achieve " 
+      << outlier << " ratio" << std::endl;
+    Eigen::Vector3f min, max;
+    ComputePcBoundaries(*cloud, min, max);
+    std::cout << "bounding box corners " << min.transpose() 
+      << " -> " << max.transpose() << std::endl;
+    std::cout << "inflating bounding box by a factor of " << bbFactor << std::endl;
+    Eigen::Vector3f delta = bbFactor*(max - min);
+    min -= 0.5*delta;
+    max += 0.5*delta;
+    std::cout << "bounding box corners " << min.transpose() 
+      << " -> " << max.transpose() << std::endl;
+    boost::random::uniform_01<float> unif;
+    for(uint32_t i=0; i< nOutl; ++i) {
+      cloud->push_back(pcl::PointXYZ(unif(gen)*(max(0)-min(0))+min(0), 
+            unif(gen)*(max(1)-min(1))+min(1), 
+            unif(gen)*(max(2)-min(2))+min(2)));       
+    }
   }
 
   jsc::Timer t0;
@@ -139,15 +161,14 @@ int main (int argc, char** argv)
   pcl::PLYWriter writer;
   writer.write(outputPath, ptNormals, false, false);
 
-  return 0;
+//  return 0;
 
   // visualize normals
   pcl::visualization::PCLVisualizer viewer("PCL Viewer");
   viewer.setBackgroundColor (0.3, 0.3, 0.3);
-//  pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color (cloud, 200, 10, 10);
-//  viewer.addPointCloud(cloud,single_color,"cloud");
-  viewer.addPointCloud(cloud,"cloud");
-  viewer.addPointCloudNormals<pcl::PointXYZ,pcl::Normal>(cloud, normals,10,0.05,"normals");
+//  viewer.addPointCloud(cloud,"cloud");
+//  viewer.addPointCloudNormals<pcl::PointXYZ,pcl::Normal>(cloud, normals,10,0.05,"normals");
+  viewer.addPointCloudNormals<pcl::PointXYZ,pcl::Normal>(cloud, normals,1,0.001,"normals");
  
   while (!viewer.wasStopped ())
   {

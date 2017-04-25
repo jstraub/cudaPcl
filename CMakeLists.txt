@@ -167,9 +167,16 @@ if(NOT DRC AND OPENNI)
     boost_program_options
     pcl_common pcl_io pcl_visualization)
 
+  add_executable(pclAddNoiseOutliers ./src/pclAddNoiseOutliers.cpp)
+  target_link_libraries(pclAddNoiseOutliers boost_system boost_thread
+    boost_random boost_program_options
+  pcl_common pcl_io pcl_search pcl_visualization pcl_features
+  vtkCommon vtkFiltering vtkRendering)
+
   pods_install_executables(pclGrabber openniSmoothNormals openniPyramid
     openniSmoothNormals_file
     pclBenchmark 
+    pclAddNoiseOutliers
     openniSmoothDepth)
 endif()
 #add_executable(freenect2Vis ./src/freenect2Visualizer.cpp)
