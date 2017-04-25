@@ -6,6 +6,7 @@ path = "../../rtDDPmeans/data/oneLoop1/"
 path = "../../rtDDPmeans/data/framesOver90DegreeTurnInOffice/"
 path = "../../rtDDPmeans/data/frames360TurnOffice/"
 path = "../../rtDDPmeans/data/jstraubHead360/"
+path = "../../mmfShared/data/"
 path = os.path.abspath(path)+"/"
 
 names = []
